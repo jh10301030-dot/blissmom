@@ -3,23 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <title>Hello</title>
-<style>
-  html, body {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-  }
-  h1 {
-    font-size: 8vw;
-    text-align: center;
-    color: #333;
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>안녕하세요, 블리스맘님!</h1>
+  <canvas id="glitter-canvas"></canvas>
+  <h1 class="title">안녕하세요, 블리스맘님!</h1>
+
+  <script>
+    const canvas = document.getElementById('glitter-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const colors = ['#fff6d8', '#ffd76a', '#ff9ecb', '#c9a7ff', '#9ee7ff'];
+    let particles = [];
+
+    window.addEventListener('mousemove', (e) => {
+      for (let i = 0; i < 3; i++) {
+        particles.push({
+          x: e.clientX + (Math.random() - 0.5) * 12,
+          y: e.clientY + (Math.random() - 0.5) * 12,
+          size: Math.random() * 3 + 1,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6 - 0.2,
+        });
+      }
+    });
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(p.life, 0);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      particles = particles.filter((p) => p.life > 0);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
 </body>
 </html>
