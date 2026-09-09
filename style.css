@@ -12,9 +12,12 @@ html, body {
 
 body {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2.5rem;
   cursor: default;
+  transition: background 0.4s ease;
 }
 
 #glitter-canvas {
@@ -41,4 +44,32 @@ body {
     0 0 25px rgba(255, 200, 120, 0.6),
     0 0 45px rgba(255, 150, 200, 0.4),
     0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.color-btn {
+  position: relative;
+  z-index: 2;
+  padding: 1.1rem 3rem;
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-weight: 700;
+  color: #1b1330;
+  background: #fff6d8;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow:
+    0 0 20px rgba(255, 235, 180, 0.6),
+    0 6px 18px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.color-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 0 28px rgba(255, 235, 180, 0.8),
+    0 8px 22px rgba(0, 0, 0, 0.5);
+}
+
+.color-btn:active {
+  transform: translateY(0) scale(0.98);
 }

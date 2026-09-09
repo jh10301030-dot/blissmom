@@ -8,6 +8,18 @@
 <body>
   <canvas id="glitter-canvas"></canvas>
   <h1 class="title">안녕하세요, 블리스맘님!</h1>
+  <button id="color-btn" class="color-btn">색 바꾸기</button>
+
+  <script>
+    const colorBtn = document.getElementById('color-btn');
+
+    colorBtn.addEventListener('click', () => {
+      const hue = Math.floor(Math.random() * 360);
+      const sat = Math.floor(Math.random() * 30) + 40;
+      document.body.style.background =
+        `radial-gradient(circle at center, hsl(${hue}, ${sat}%, 22%) 0%, hsl(${hue}, ${sat}%, 10%) 70%, hsl(${hue}, ${sat}%, 4%) 100%)`;
+    });
+  </script>
 
   <script>
     const canvas = document.getElementById('glitter-canvas');
