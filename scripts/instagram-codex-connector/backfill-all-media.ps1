@@ -146,11 +146,20 @@ try {
 
         if ($page.data) { $allMediaBasic += $page.data }
 
-        if ($page.paging -and $page.paging.next -and $page.paging.cursors -and $page.paging.cursors.after) {
-            $afterCursor = $page.paging.cursors.after
-        } else {
-            break
+        # 마지막 페이지에서는 paging/next/cursors/after 속성 자체가 없을 수 있어
+        # (Set-StrictMode 상태에서 없는 속성 접근 시 오류가 나므로) Select-Object 로 정규화 후 확인
+        $hasNextPage = $false
+        if ($page.data -and $page.data.Count -gt 0 -and $page.paging) {
+            $pagingNorm = $page.paging | Select-Object next, cursors
+            if ($pagingNorm.next -and $pagingNorm.cursors) {
+                $cursorsNorm = $pagingNorm.cursors | Select-Object after
+                if ($cursorsNorm.after) {
+                    $afterCursor = $cursorsNorm.after
+                    $hasNextPage = $true
+                }
+            }
         }
+        if (-not $hasNextPage) { break }
         Start-Sleep -Milliseconds 300
     }
 
@@ -162,7 +171,8 @@ try {
     $rateLimited = $false
 
     for ($i = 0; $i -lt $allMediaBasic.Count; $i++) {
-        $item = $allMediaBasic[$i]
+        # 게시물마다 caption/media_url/thumbnail_url 등 일부 필드가 없을 수 있어 정규화
+        $item = $allMediaBasic[$i] | Select-Object id, caption, media_type, media_product_type, permalink, timestamp, media_url, thumbnail_url
         $existing = $archiveById[$item.id]
         $hasValidInsight = $existing -and $existing.reach -ne 'N/A' -and $null -ne $existing.reach
         if ($hasValidInsight -and -not $ForceRefresh) {
@@ -215,6 +225,9 @@ try {
         $thumbnailUrl = $item.media_url
         if ($item.media_type -eq 'VIDEO' -and $item.thumbnail_url) { $thumbnailUrl = $item.thumbnail_url }
 
+        $insightNote = ''
+        if ($lastError) { $insightNote = "일부 지표 조회 실패: $lastError" }
+
         $archiveById[$item.id] = [PSCustomObject]@{
             id               = $item.id
             mediaType        = $item.media_type
@@ -227,7 +240,7 @@ try {
             reach            = $insightValues.reach
             saved            = $insightValues.saved
             shares           = $insightValues.shares
-            insightNote      = if ($lastError) { "일부 지표 조회 실패: $lastError" } else { '' }
+            insightNote      = $insightNote
         }
 
         if (($newlyProcessed % 20) -eq 0) {
