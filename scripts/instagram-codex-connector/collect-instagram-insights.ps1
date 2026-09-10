@@ -90,6 +90,257 @@ function Invoke-IgApi {
     }
 }
 
+function Get-DashboardHtmlTemplate {
+    @'
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__USERNAME__ 인스타그램 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --pink: #ec4899;
+    --pink-light: #fce7f3;
+    --bg: #faf7f8;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #f0e4ec;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .eyebrow {
+    color: var(--pink);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h1 .gain { color: var(--pink); }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 14px;
+  }
+  .stat-box { text-align: left; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 700; }
+  .stat-value.pink { color: var(--pink); }
+  canvas { max-width: 100%; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; }
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .media-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+  }
+  .media-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    background: var(--pink-light);
+  }
+  .media-card .body { padding: 10px; }
+  .media-card .caption {
+    font-size: 12px;
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 6px;
+    min-height: 30px;
+  }
+  .media-card .metrics { font-size: 11px; color: var(--pink); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --pink: #f472b6;
+      --pink-light: #3b1f2b;
+      --bg: #17141a;
+      --card: #221d26;
+      --text: #f2eef3;
+      --muted: #9a94a3;
+      --border: #33283a;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">DAILY_METRICS.EXE</div>
+  <h1>@__USERNAME__ 일별 지표 <span class="gain">__FOLLOWERS__명</span></h1>
+  <div class="meta">생성 시각: __GENERATED_AT__ · 토큰 만료일: __TOKEN_EXPIRY__</div>
+
+  <div class="card stats">
+    <div class="stat-box">
+      <div class="stat-label">오늘 팔로워</div>
+      <div class="stat-value pink">__FOLLOWERS__</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">기간 순증</div>
+      <div class="stat-value">__PERIOD_GAIN__</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">일평균 순증</div>
+      <div class="stat-value">__AVG_GAIN__</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">최고 증가일</div>
+      <div class="stat-value" style="font-size:16px">__BEST_DAY__</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">발행 콘텐츠</div>
+      <div class="stat-value">__MEDIA_COUNT__</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">GROWTH_CHART</div>
+    <canvas id="growthChart" height="90"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">MONTHLY_GAIN</div>
+    <canvas id="monthlyChart" height="90"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">RECENT_CONTENT</div>
+    <div class="media-grid" id="mediaGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">DAILY_LOG</div>
+    <div class="table-wrap">
+      <table id="dailyLogTable">
+        <thead>
+          <tr><th>날짜</th><th>요일</th><th>팔로워</th><th>전일 대비</th><th>도달 합계</th><th>저장 합계</th><th>공유 합계</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  var history = __HISTORY_JSON__;
+  var monthly = __MONTHLY_JSON__;
+  var media = __MEDIA_JSON__;
+  var weekdayNames = ['일','월','화','수','목','금','토'];
+
+  function fmtDate(d) {
+    var dt = new Date(d + 'T00:00:00');
+    return d + ' (' + weekdayNames[dt.getDay()] + ')';
+  }
+
+  if (typeof Chart !== 'undefined' && history.length > 0) {
+    var ctx1 = document.getElementById('growthChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: history.map(function (h) { return h.date; }),
+        datasets: [{
+          label: '팔로워',
+          data: history.map(function (h) { return h.followersCount; }),
+          borderColor: '#ec4899',
+          backgroundColor: 'rgba(236,72,153,0.12)',
+          fill: true,
+          tension: 0.25,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: false } }
+      }
+    });
+  }
+
+  if (typeof Chart !== 'undefined' && monthly.length > 0) {
+    var ctx2 = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: monthly.map(function (m) { return m.month; }),
+        datasets: [{
+          label: '월별 순증',
+          data: monthly.map(function (m) { return m.gain; }),
+          backgroundColor: '#ec4899',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  var grid = document.getElementById('mediaGrid');
+  media.forEach(function (m) {
+    var a = document.createElement('a');
+    a.href = m.permalink || '#';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.className = 'media-card';
+    var img = m.thumbnailUrl ? '<img src="' + m.thumbnailUrl + '" loading="lazy">' : '';
+    var caption = (m.caption || '(캡션 없음)').toString();
+    a.innerHTML = img +
+      '<div class="body">' +
+      '<div class="caption">' + caption.replace(/</g, '&lt;') + '</div>' +
+      '<div class="metrics">조회 ' + m.views + ' · 도달 ' + m.reach + ' · 저장 ' + m.saved + ' · 공유 ' + m.shares + '</div>' +
+      '</div>';
+    grid.appendChild(a);
+  });
+
+  var tbody = document.querySelector('#dailyLogTable tbody');
+  history.slice().reverse().forEach(function (h) {
+    var tr = document.createElement('tr');
+    var delta = (h.followersDelta === null || h.followersDelta === undefined) ? '-' :
+      (h.followersDelta > 0 ? '+' + h.followersDelta : h.followersDelta);
+    tr.innerHTML = '<td>' + fmtDate(h.date) + '</td>' +
+      '<td>' + weekdayNames[new Date(h.date + 'T00:00:00').getDay()] + '</td>' +
+      '<td>' + h.followersCount + '</td>' +
+      '<td>' + delta + '</td>' +
+      '<td>' + h.totalReach + '</td>' +
+      '<td>' + h.totalSaved + '</td>' +
+      '<td>' + h.totalShares + '</td>';
+    tbody.appendChild(tr);
+  });
+</script>
+</body>
+</html>
+'@
+}
+
 # ---------------------------------------------------------------------------
 # 1. 설정 로드 및 복호화
 # ---------------------------------------------------------------------------
@@ -135,20 +386,23 @@ try {
         $profileUri = 'https://graph.instagram.com/me' +
             '?fields=id,username,name,account_type,media_count,followers_count' +
             "&access_token=$([uri]::EscapeDataString($accessToken))"
-        $profile = Invoke-IgApi -Uri $profileUri
+        $rawProfile = Invoke-IgApi -Uri $profileUri
     } catch {
         $profileUri = 'https://graph.instagram.com/me' +
             '?fields=id,username,account_type,media_count' +
             "&access_token=$([uri]::EscapeDataString($accessToken))"
-        $profile = Invoke-IgApi -Uri $profileUri
+        $rawProfile = Invoke-IgApi -Uri $profileUri
     }
+    # Select-Object 로 정규화: 응답에 없는 필드(name/followers_count 등)도 $null 로 항상 존재하게 만듦
+    # (Set-StrictMode 상태에서 없는 속성에 바로 접근하면 오류가 나기 때문)
+    $profile = $rawProfile | Select-Object id, username, name, account_type, media_count, followers_count
 
     # -----------------------------------------------------------------------
     # 4. 최근 콘텐츠 목록 조회
     # -----------------------------------------------------------------------
     Write-Host "최근 콘텐츠 $MediaCount 개를 가져오는 중..." -ForegroundColor DarkGray
     $mediaUri = 'https://graph.instagram.com/me/media' +
-        "?fields=id,caption,media_type,media_product_type,permalink,timestamp&limit=$MediaCount" +
+        "?fields=id,caption,media_type,media_product_type,permalink,timestamp,media_url,thumbnail_url&limit=$MediaCount" +
         "&access_token=$([uri]::EscapeDataString($accessToken))"
     $mediaList = Invoke-IgApi -Uri $mediaUri
 
@@ -162,7 +416,9 @@ try {
     )
 
     $mediaInsights = @()
-    foreach ($item in $mediaList.data) {
+    foreach ($rawItem in $mediaList.data) {
+        # 게시물마다 caption/media_url/thumbnail_url 등 일부 필드가 없을 수 있어 정규화
+        $item = $rawItem | Select-Object id, caption, media_type, media_product_type, permalink, timestamp, media_url, thumbnail_url
         Write-Host "  - $($item.id) 인사이트 확인 중..." -ForegroundColor DarkGray
         $insightValues = [ordered]@{
             views  = 'N/A'
@@ -180,7 +436,9 @@ try {
                     "&access_token=$([uri]::EscapeDataString($accessToken))"
                 $insightsResult = Invoke-IgApi -Uri $insightsUri
 
-                foreach ($metricData in $insightsResult.data) {
+                foreach ($rawMetricData in $insightsResult.data) {
+                    # 응답 형태(values 배열 방식 / total_value 방식)가 지표마다 달라 정규화 후 접근
+                    $metricData = $rawMetricData | Select-Object name, values, total_value
                     $value = 'N/A'
                     if ($metricData.values -and $metricData.values.Count -gt 0) {
                         $value = $metricData.values[0].value
@@ -202,6 +460,11 @@ try {
             $insightNote = "일부 지표 조회 실패: $lastError"
         }
 
+        $thumbnailUrl = $item.media_url
+        if ($item.media_type -eq 'VIDEO' -and $item.thumbnail_url) {
+            $thumbnailUrl = $item.thumbnail_url
+        }
+
         $mediaInsights += [PSCustomObject]@{
             id               = $item.id
             mediaType        = $item.media_type
@@ -209,6 +472,7 @@ try {
             timestamp        = $item.timestamp
             permalink        = $item.permalink
             caption          = $item.caption
+            thumbnailUrl     = $thumbnailUrl
             views            = $insightValues.views
             reach            = $insightValues.reach
             saved            = $insightValues.saved
@@ -304,7 +568,86 @@ try {
     Set-Content -Path $latestMdPath -Value $md.ToString() -Encoding UTF8
 
     # -----------------------------------------------------------------------
-    # 8. 콘솔 요약 (비밀값 절대 미출력)
+    # 8. 히스토리 누적 (팔로워 추이 그래프용)
+    # -----------------------------------------------------------------------
+    $historyPath = Join-Path $ReportsDir 'history.json'
+    $todayKey = $generatedAtUtc.ToLocalTime().ToString('yyyy-MM-dd')
+
+    $history = @()
+    if (Test-Path $historyPath) {
+        try { $history = @(Get-Content -Path $historyPath -Raw | ConvertFrom-Json) } catch { $history = @() }
+    }
+    $history = @($history | Where-Object { $_.date -ne $todayKey })
+    $history += [PSCustomObject]@{
+        date           = $todayKey
+        followersCount = $profile.followers_count
+        followersDelta = $followersDelta
+        totalReach     = $totalReach
+        totalSaved     = $totalSaved
+        totalShares    = $totalShares
+        mediaCount     = $profile.media_count
+    }
+    $history = @($history | Sort-Object { [DateTime]$_.date })
+    ConvertTo-Json -InputObject $history -Depth 5 | Set-Content -Path $historyPath -Encoding UTF8
+
+    # -----------------------------------------------------------------------
+    # 9. 대시보드(HTML) 생성 - 팔로워 성장 그래프 + 콘텐츠 성과
+    # -----------------------------------------------------------------------
+    $firstEntry = $history | Select-Object -First 1
+    $lastEntry = $history | Select-Object -Last 1
+    $periodGain = $null
+    if ($firstEntry -and $lastEntry -and $null -ne $firstEntry.followersCount -and $null -ne $lastEntry.followersCount) {
+        $periodGain = [int]$lastEntry.followersCount - [int]$firstEntry.followersCount
+    }
+    $deltaEntries = @($history | Where-Object { $null -ne $_.followersDelta })
+    $avgDailyGain = $null
+    if ($deltaEntries.Count -gt 0) {
+        $sumDelta = ($deltaEntries | ForEach-Object { [int]$_.followersDelta } | Measure-Object -Sum).Sum
+        $avgDailyGain = [math]::Round($sumDelta / $deltaEntries.Count)
+    }
+    $bestDayEntry = $deltaEntries | Sort-Object { [int]$_.followersDelta } -Descending | Select-Object -First 1
+
+    $monthlyGains = @($history | Where-Object { $null -ne $_.followersDelta } |
+        Group-Object { ([DateTime]$_.date).ToString('yyyy-MM') } |
+        ForEach-Object {
+            [PSCustomObject]@{
+                month = $_.Name
+                gain  = ($_.Group | ForEach-Object { [int]$_.followersDelta } | Measure-Object -Sum).Sum
+            }
+        } | Sort-Object month)
+
+    $bestDayText = '-'
+    if ($bestDayEntry) { $bestDayText = "$($bestDayEntry.date) (+$($bestDayEntry.followersDelta))" }
+    $periodGainText = '-'
+    if ($null -ne $periodGain) { $periodGainText = "$periodGain" }
+    $avgGainText = '-'
+    if ($null -ne $avgDailyGain) { $avgGainText = "$avgDailyGain" }
+
+    $historyJsonData = ConvertTo-Json -InputObject $history -Depth 5 -Compress
+    $monthlyJsonData = ConvertTo-Json -InputObject $monthlyGains -Depth 5 -Compress
+    $mediaJsonData = ConvertTo-Json -InputObject $mediaInsights -Depth 5 -Compress
+    if (-not $historyJsonData) { $historyJsonData = '[]' }
+    if (-not $monthlyJsonData) { $monthlyJsonData = '[]' }
+    if (-not $mediaJsonData) { $mediaJsonData = '[]' }
+
+    $dashboardPath = Join-Path $ReportsDir 'dashboard.html'
+    $html = (Get-DashboardHtmlTemplate).
+        Replace('__USERNAME__', $profile.username).
+        Replace('__FOLLOWERS__', "$($profile.followers_count)").
+        Replace('__PERIOD_GAIN__', $periodGainText).
+        Replace('__AVG_GAIN__', $avgGainText).
+        Replace('__BEST_DAY__', $bestDayText).
+        Replace('__MEDIA_COUNT__', "$($profile.media_count)").
+        Replace('__TOKEN_EXPIRY__', $expiresAtUtc.ToString('yyyy-MM-dd')).
+        Replace('__GENERATED_AT__', $generatedAtUtc.ToLocalTime().ToString('yyyy-MM-dd HH:mm')).
+        Replace('__HISTORY_JSON__', $historyJsonData).
+        Replace('__MONTHLY_JSON__', $monthlyJsonData).
+        Replace('__MEDIA_JSON__', $mediaJsonData)
+
+    Set-Content -Path $dashboardPath -Value $html -Encoding UTF8
+
+    # -----------------------------------------------------------------------
+    # 10. 콘솔 요약 (비밀값 절대 미출력)
     # -----------------------------------------------------------------------
     Write-Host ''
     Write-Host '=== 수집 완료 ===' -ForegroundColor Green
@@ -314,6 +657,7 @@ try {
     Write-Host "토큰 만료일     : $($expiresAtUtc.ToString('yyyy-MM-dd'))"
     Write-Host "JSON 리포트     : $jsonPath"
     Write-Host "Markdown 리포트 : $mdPath"
+    Write-Host "대시보드        : $dashboardPath"
 
 } finally {
     $accessToken = $null

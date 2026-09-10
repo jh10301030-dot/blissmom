@@ -262,14 +262,17 @@ try {
         $meUri = 'https://graph.instagram.com/me' +
             '?fields=id,username,name,account_type,followers_count,media_count' +
             "&access_token=$([uri]::EscapeDataString($longLivedToken))"
-        $me = Invoke-IgApi -Uri $meUri
+        $rawMe = Invoke-IgApi -Uri $meUri
     } catch {
         # 일부 계정/권한에서는 followers_count 등이 지원되지 않을 수 있어 최소 필드로 재시도
         $meUri = 'https://graph.instagram.com/me' +
             '?fields=id,username,account_type' +
             "&access_token=$([uri]::EscapeDataString($longLivedToken))"
-        $me = Invoke-IgApi -Uri $meUri
+        $rawMe = Invoke-IgApi -Uri $meUri
     }
+    # Select-Object 로 정규화: 응답에 없는 필드도 $null 로 항상 존재하게 만듦
+    # (Set-StrictMode 상태에서 없는 속성에 바로 접근하면 오류가 나기 때문)
+    $me = $rawMe | Select-Object id, username, name, account_type, followers_count, media_count
 
     $basicScopeOk = -not [string]::IsNullOrWhiteSpace($me.id)
 

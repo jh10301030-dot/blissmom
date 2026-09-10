@@ -13,7 +13,12 @@ Windows PC에서 Instagram Graph API(Instagram Login) 연결을 설정하고,
 | `setup-instagram-insights.ps1` | 최초 1회(또는 토큰 재발급 시) 실행. 보안 입력창으로 토큰/앱 시크릿을 받아 연결·검증 후 암호화 저장 |
 | `collect-instagram-insights.ps1` | 팔로워 수(전날 대비 증감 포함) + 최근 콘텐츠 5개의 조회/도달/저장/공유 데이터를 "아침 브리프" 형태의 JSON/Markdown으로 저장. 만료 10일 이내면 토큰을 자동 갱신 |
 | `register-daily-brief.ps1` | `collect-instagram-insights.ps1`을 매일 오전 8시(기본값)에 자동 실행하도록 Windows 작업 스케줄러에 등록 (토큰/시크릿을 다루지 않는 별도 스크립트) |
-| `1_연결설정.bat` / `2_인사이트수집.bat` / `3_아침브리프_자동등록.bat` | 위 스크립트들을 더블클릭만으로 실행하기 위한 실행기 |
+| `make-desktop-shortcut.ps1` | 바탕화면에 최신 대시보드를 여는 바로가기 아이콘 생성 |
+| `1_연결설정.bat` / `2_인사이트수집.bat` / `3_아침브리프_자동등록.bat` / `4_결과보기.bat` / `5_바탕화면_바로가기_만들기.bat` | 위 스크립트들을 더블클릭만으로 실행하기 위한 실행기 |
+
+`collect-instagram-insights.ps1`을 실행할 때마다 `reports\dashboard.html` 이 생성/갱신됩니다.
+팔로워 성장 그래프, 월별 순증, 최근 콘텐츠 카드, 일별 로그 표가 있는 시각적 대시보드로,
+더블클릭하면 기본 브라우저로 바로 열립니다 (`4_결과보기.bat` 또는 바탕화면 바로가기 사용).
 
 ## 사용 방법
 
@@ -72,6 +77,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\setup-instagram-insights.p
 %LOCALAPPDATA%\InstagramCodexConnector\reports\instagram-insights-<타임스탬프>.md
 %LOCALAPPDATA%\InstagramCodexConnector\reports\latest.json   (최신본 덮어쓰기)
 %LOCALAPPDATA%\InstagramCodexConnector\reports\latest.md     (최신본 덮어쓰기)
+%LOCALAPPDATA%\InstagramCodexConnector\reports\dashboard.html (시각적 대시보드, 매번 갱신)
+%LOCALAPPDATA%\InstagramCodexConnector\reports\history.json  (일자별 팔로워/성과 누적 기록)
 ```
 
 ## 알려진 제약
