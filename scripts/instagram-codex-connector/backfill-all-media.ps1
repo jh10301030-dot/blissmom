@@ -268,7 +268,17 @@ try {
         Write-Host '아직 다 못 끝냈습니다. 나중에 이 스크립트를 다시 실행해서 이어서 진행하세요.' -ForegroundColor Yellow
     } else {
         Write-Host ''
-        Write-Host '완료되었습니다! 2_인사이트수집.bat 을 한 번 더 실행하면 월간 리포트에 반영됩니다.' -ForegroundColor Green
+        Write-Host '완료되었습니다! 대시보드를 새로 만드는 중...' -ForegroundColor Green
+        $collectScript = Join-Path $PSScriptRoot 'collect-instagram-insights.ps1'
+        if (Test-Path $collectScript) {
+            try {
+                & $collectScript
+            } catch {
+                Write-Warning "대시보드 갱신 중 오류(직접 2_인사이트수집.bat 을 실행해 주세요): $($_.Exception.Message)"
+            }
+        } else {
+            Write-Warning 'collect-instagram-insights.ps1 을 찾을 수 없어 대시보드를 자동으로 갱신하지 못했습니다. 2_인사이트수집.bat 을 직접 실행해 주세요.'
+        }
     }
 } finally {
     $accessToken = $null
