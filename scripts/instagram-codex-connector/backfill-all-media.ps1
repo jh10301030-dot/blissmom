@@ -27,7 +27,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v1'
+$SCRIPT_VERSION = '2026-09-11-v2'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -272,8 +272,10 @@ try {
     } else {
         Write-Host ''
         Write-Host '완료되었습니다! 대시보드를 새로 만드는 중...' -ForegroundColor Green
-        $collectScript = Join-Path $PSScriptRoot 'collect-instagram-insights.ps1'
-        if (Test-Path $collectScript) {
+        # 파일 이름 뒤에 (1) 등이 붙어있어도 찾을 수 있도록 패턴으로 검색
+        $collectScript = Get-ChildItem -Path $PSScriptRoot -Filter 'collect*instagram*insights*.ps1' -File -ErrorAction SilentlyContinue |
+            Select-Object -First 1 -ExpandProperty FullName
+        if ($collectScript) {
             try {
                 & $collectScript
             } catch {
