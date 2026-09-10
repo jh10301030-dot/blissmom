@@ -918,7 +918,10 @@ try {
         } | Sort-Object month)
 
     $bestDayText = '-'
-    if ($bestDayEntry) { $bestDayText = "$($bestDayEntry.date) (+$($bestDayEntry.followersDelta))" }
+    if ($bestDayEntry) {
+        $bestDeltaSigned = if ([int]$bestDayEntry.followersDelta -gt 0) { "+$($bestDayEntry.followersDelta)" } else { "$($bestDayEntry.followersDelta)" }
+        $bestDayText = "$($bestDayEntry.date) ($bestDeltaSigned)"
+    }
     $periodGainText = '-'
     if ($null -ne $periodGain) { $periodGainText = "$periodGain" }
     $avgGainText = '-'
