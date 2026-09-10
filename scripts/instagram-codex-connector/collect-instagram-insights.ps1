@@ -106,6 +106,52 @@ function ConvertTo-JsonArraySafe {
     return $json
 }
 
+function Format-InlineMarkdown {
+    # 월간 리포트 노트(.md)용 최소 인라인 변환: HTML 이스케이프 후 **굵게**만 지원
+    param([string]$Text)
+    $t = $Text
+    $t = $t.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
+    $t = [regex]::Replace($t, '\*\*(.+?)\*\*', '<strong>$1</strong>')
+    return $t
+}
+
+function ConvertFrom-SimpleMarkdown {
+    # 월간 리포트 노트(.md) 파일을 대시보드에 표시할 간단한 HTML로 변환
+    # 지원: # ## ### 제목, - 글머리 기호, > 인용, **굵게**, 나머지는 문단
+    param([Parameter(Mandatory)][string]$Markdown)
+    $lines = $Markdown -split "`r?`n"
+    $html = New-Object System.Text.StringBuilder
+    $inList = $false
+    foreach ($line in $lines) {
+        $trimmed = $line.Trim()
+        if ($trimmed -eq '') {
+            if ($inList) { [void]$html.AppendLine('</ul>'); $inList = $false }
+            continue
+        }
+        if ($trimmed -match '^(#{1,4})\s+(.*)$') {
+            if ($inList) { [void]$html.AppendLine('</ul>'); $inList = $false }
+            $level = $Matches[1].Length + 2
+            if ($level -gt 4) { $level = 4 }
+            [void]$html.AppendLine("<h$level>$(Format-InlineMarkdown $Matches[2])</h$level>")
+            continue
+        }
+        if ($trimmed -match '^>\s?(.*)$') {
+            if ($inList) { [void]$html.AppendLine('</ul>'); $inList = $false }
+            [void]$html.AppendLine("<blockquote>$(Format-InlineMarkdown $Matches[1])</blockquote>")
+            continue
+        }
+        if ($trimmed -match '^[-*]\s+(.*)$') {
+            if (-not $inList) { [void]$html.AppendLine('<ul>'); $inList = $true }
+            [void]$html.AppendLine("<li>$(Format-InlineMarkdown $Matches[1])</li>")
+            continue
+        }
+        if ($inList) { [void]$html.AppendLine('</ul>'); $inList = $false }
+        [void]$html.AppendLine("<p>$(Format-InlineMarkdown $trimmed)</p>")
+    }
+    if ($inList) { [void]$html.AppendLine('</ul>') }
+    return $html.ToString()
+}
+
 function Get-DashboardHtmlTemplate {
     @'
 <!doctype html>
@@ -197,6 +243,54 @@ function Get-DashboardHtmlTemplate {
   }
   .media-card .metrics { font-size: 11px; color: var(--pink); font-weight: 600; }
   .table-wrap { overflow-x: auto; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab-btn {
+    border: none;
+    background: var(--pink-light);
+    color: var(--pink);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .tab-btn.active { background: var(--pink); color: #fff; }
+  .month-card { margin-bottom: 16px; }
+  .month-title { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+  .month-title .gain { color: var(--pink); }
+  .month-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .month-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .month-stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .month-stat-value { font-size: 18px; font-weight: 700; }
+  .top3-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .notes-box { font-size: 13px; line-height: 1.6; }
+  .notes-box h3, .notes-box h4 { margin: 12px 0 6px; }
+  .notes-box blockquote {
+    border-left: 3px solid var(--pink);
+    margin: 8px 0;
+    padding: 4px 12px;
+    color: var(--muted);
+    background: var(--pink-light);
+    border-radius: 0 8px 8px 0;
+  }
+  .notes-box ul { margin: 6px 0; padding-left: 20px; }
+  .notes-placeholder {
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--pink-light);
+    border-radius: 10px;
+    padding: 14px;
+  }
   @media (prefers-color-scheme: dark) {
     :root {
       --pink: #f472b6;
@@ -216,6 +310,12 @@ function Get-DashboardHtmlTemplate {
   <h1>@__USERNAME__ 일별 지표 <span class="gain">__FOLLOWERS__명</span></h1>
   <div class="meta">생성 시각: __GENERATED_AT__ · 토큰 만료일: __TOKEN_EXPIRY__</div>
 
+  <div class="tabs">
+    <button class="tab-btn active" id="tabBtnDaily" type="button">📊 일별 지표</button>
+    <button class="tab-btn" id="tabBtnMonthly" type="button">📅 월간 리포트</button>
+  </div>
+
+  <div id="dailyView">
   <div class="card stats">
     <div class="stat-box">
       <div class="stat-label">오늘 팔로워</div>
@@ -265,17 +365,27 @@ function Get-DashboardHtmlTemplate {
       </table>
     </div>
   </div>
+  </div>
+
+  <div id="monthlyView" hidden></div>
 </div>
 
 <script>
   var history = __HISTORY_JSON__;
   var monthly = __MONTHLY_JSON__;
   var media = __MEDIA_JSON__;
+  var mediaArchive = __MEDIA_ARCHIVE_JSON__;
+  var monthlyNotes = __MONTHLY_NOTES_JSON__;
   var weekdayNames = ['일','월','화','수','목','금','토'];
 
   function fmtDate(d) {
     var dt = new Date(d + 'T00:00:00');
     return d + ' (' + weekdayNames[dt.getDay()] + ')';
+  }
+
+  function fmtNum(n) {
+    if (n === null || n === undefined || n === 'N/A') return '-';
+    return n;
   }
 
   try {
@@ -366,6 +476,101 @@ function Get-DashboardHtmlTemplate {
     tbody.appendChild(tr);
     });
   } catch (e) { console.error('daily log table error', e); }
+
+  try {
+    function fmtMonthTitle(m) {
+      var parts = m.split('-');
+      return parseInt(parts[0], 10) + '년 ' + parseInt(parts[1], 10) + '월';
+    }
+
+    function renderMonthlyReport() {
+      var container = document.getElementById('monthlyView');
+      if (!monthly || monthly.length === 0) {
+        container.innerHTML = '<div class="card"><p style="color:#9ca3af;font-size:13px">아직 월간 데이터가 부족합니다. 매일 수집이 며칠 쌓이면 표시됩니다.</p></div>';
+        return;
+      }
+
+      var monthsSorted = monthly.slice().sort(function (a, b) { return a.month < b.month ? 1 : -1; });
+      var html = '';
+
+      monthsSorted.forEach(function (mo) {
+        var monthMedia = mediaArchive.filter(function (m) {
+          return (m.timestamp || '').slice(0, 7) === mo.month;
+        });
+        var reachVals = monthMedia.map(function (m) { return (typeof m.reach === 'number') ? m.reach : null; }).filter(function (v) { return v !== null; });
+        var savedVals = monthMedia.map(function (m) { return (typeof m.saved === 'number') ? m.saved : null; }).filter(function (v) { return v !== null; });
+        var viewVals = monthMedia.map(function (m) { return (typeof m.views === 'number') ? m.views : null; }).filter(function (v) { return v !== null; });
+        var avgReach = reachVals.length ? Math.round(reachVals.reduce(function (a, b) { return a + b; }, 0) / reachVals.length) : null;
+        var avgViews = viewVals.length ? Math.round(viewVals.reduce(function (a, b) { return a + b; }, 0) / viewVals.length) : null;
+        var totalSavedM = savedVals.reduce(function (a, b) { return a + b; }, 0);
+        var totalReachM = reachVals.reduce(function (a, b) { return a + b; }, 0);
+        var saveRate = (totalReachM > 0) ? ((totalSavedM / totalReachM) * 100).toFixed(1) + '%' : '-';
+
+        var top3 = monthMedia.slice().sort(function (a, b) {
+          var ra = (typeof a.reach === 'number') ? a.reach : -1;
+          var rb = (typeof b.reach === 'number') ? b.reach : -1;
+          return rb - ra;
+        }).slice(0, 3);
+
+        var gainText = (mo.gain === null || mo.gain === undefined) ? '-' : (mo.gain > 0 ? '+' + mo.gain : mo.gain);
+        var avgGainCellText = (mo.avgDailyGain === null || mo.avgDailyGain === undefined) ? '-' : (mo.avgDailyGain > 0 ? '+' + mo.avgDailyGain : mo.avgDailyGain);
+
+        var top3Html;
+        if (top3.length === 0) {
+          top3Html = '<p style="color:#9ca3af;font-size:13px">이 달에 수집된 콘텐츠가 없습니다.</p>';
+        } else {
+          top3Html = '<div class="top3-grid">' + top3.map(function (m) {
+            var img = m.thumbnailUrl ? '<img src="' + m.thumbnailUrl + '" loading="lazy">' : '';
+            var caption = (m.caption || '(캡션 없음)').toString().replace(/</g, '&lt;');
+            return '<a href="' + (m.permalink || '#') + '" target="_blank" rel="noopener" class="media-card">' + img +
+              '<div class="body"><div class="caption">' + caption + '</div>' +
+              '<div class="metrics">조회 ' + fmtNum(m.views) + ' · 저장 ' + fmtNum(m.saved) + '</div></div></a>';
+          }).join('') + '</div>';
+        }
+
+        var notesHtml = monthlyNotes[mo.month];
+        var notesBlock = notesHtml
+          ? ('<div class="notes-box">' + notesHtml + '</div>')
+          : ('<div class="notes-placeholder">아직 이 달 분석글이 없어요. Claude에게 "' + fmtMonthTitle(mo.month) + ' 인스타그램 리포트 써줘"라고 요청하면, reports\\monthly-notes\\' + mo.month + '.md 파일로 만들어 드립니다. 그 파일을 저장하면 다음 수집 때부터 여기에 표시됩니다.</div>');
+
+        html += '<div class="card month-card">' +
+          '<div class="month-title">' + fmtMonthTitle(mo.month) + ' <span class="gain">' + gainText + '명</span></div>' +
+          '<div class="month-sub">' + fmtNum(mo.startFollowers) + ' → ' + fmtNum(mo.endFollowers) + ' · ' + mo.days + '일</div>' +
+          '<div class="month-stats">' +
+            '<div><div class="month-stat-label">일평균 순증</div><div class="month-stat-value">' + avgGainCellText + '</div></div>' +
+            '<div><div class="month-stat-label">발행 콘텐츠</div><div class="month-stat-value">' + monthMedia.length + '개</div></div>' +
+            '<div><div class="month-stat-label">평균 조회</div><div class="month-stat-value">' + fmtNum(avgViews) + '</div></div>' +
+            '<div><div class="month-stat-label">평균 도달</div><div class="month-stat-value">' + fmtNum(avgReach) + '</div></div>' +
+            '<div><div class="month-stat-label">평균 저장률</div><div class="month-stat-value">' + saveRate + '</div></div>' +
+          '</div>' +
+          top3Html +
+          notesBlock +
+          '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    renderMonthlyReport();
+
+    var tabBtnDaily = document.getElementById('tabBtnDaily');
+    var tabBtnMonthly = document.getElementById('tabBtnMonthly');
+    var dailyViewEl = document.getElementById('dailyView');
+    var monthlyViewEl = document.getElementById('monthlyView');
+
+    tabBtnDaily.addEventListener('click', function () {
+      dailyViewEl.hidden = false;
+      monthlyViewEl.hidden = true;
+      tabBtnDaily.classList.add('active');
+      tabBtnMonthly.classList.remove('active');
+    });
+    tabBtnMonthly.addEventListener('click', function () {
+      dailyViewEl.hidden = true;
+      monthlyViewEl.hidden = false;
+      tabBtnMonthly.classList.add('active');
+      tabBtnDaily.classList.remove('active');
+    });
+  } catch (e) { console.error('monthly report error', e); }
 </script>
 </body>
 </html>
@@ -513,7 +718,23 @@ try {
     }
 
     # -----------------------------------------------------------------------
-    # 6. 전날 리포트와 비교 (팔로워 증감 계산용)
+    # 6. 게시물 아카이브 누적 (월간 리포트의 발행 수 / TOP3 / 평균 지표 계산용)
+    #    매번 최근 5개만 조회하지만, 본 적 있는 게시물은 id로 계속 최신 값을 갱신하며
+    #    영구 보관한다. 게시물이 "최근 5개" 창에서 밀려나기 전까지 값이 계속 갱신된다.
+    # -----------------------------------------------------------------------
+    $mediaArchivePath = Join-Path $ReportsDir 'media-archive.json'
+    $mediaArchive = @()
+    if (Test-Path $mediaArchivePath) {
+        try { $mediaArchive = @(Get-Content -Path $mediaArchivePath -Raw | ConvertFrom-Json) } catch { $mediaArchive = @() }
+    }
+    $archiveById = [ordered]@{}
+    foreach ($m in $mediaArchive) { $archiveById[$m.id] = $m }
+    foreach ($m in $mediaInsights) { $archiveById[$m.id] = $m }
+    $mediaArchive = @($archiveById.Values)
+    Set-Content -Path $mediaArchivePath -Value (ConvertTo-JsonArraySafe -InputObject $mediaArchive -Depth 5) -Encoding UTF8
+
+    # -----------------------------------------------------------------------
+    # 7. 전날 리포트와 비교 (팔로워 증감 계산용)
     # -----------------------------------------------------------------------
     $latestJsonPath = Join-Path $ReportsDir 'latest.json'
     $latestMdPath   = Join-Path $ReportsDir 'latest.md'
@@ -638,12 +859,22 @@ try {
     }
     $bestDayEntry = $deltaEntries | Sort-Object { [int]$_.followersDelta } -Descending | Select-Object -First 1
 
-    $monthlyGains = @($history | Where-Object { $null -ne $_.followersDelta } |
-        Group-Object { ([DateTime]$_.date).ToString('yyyy-MM') } |
-        ForEach-Object {
+    $monthlyGains = @($history | Group-Object { ([DateTime]$_.date).ToString('yyyy-MM') } | ForEach-Object {
+            $groupSorted = @($_.Group | Sort-Object { [DateTime]$_.date })
+            $deltasInMonth = @($groupSorted | Where-Object { $null -ne $_.followersDelta } | ForEach-Object { [int]$_.followersDelta })
+            $gainSum = $null
+            $avgInMonth = $null
+            if ($deltasInMonth.Count -gt 0) {
+                $gainSum = ($deltasInMonth | Measure-Object -Sum).Sum
+                $avgInMonth = [math]::Round(($deltasInMonth | Measure-Object -Average).Average)
+            }
             [PSCustomObject]@{
-                month = $_.Name
-                gain  = ($_.Group | ForEach-Object { [int]$_.followersDelta } | Measure-Object -Sum).Sum
+                month          = $_.Name
+                startFollowers = ($groupSorted | Select-Object -First 1).followersCount
+                endFollowers   = ($groupSorted | Select-Object -Last 1).followersCount
+                days           = $groupSorted.Count
+                gain           = $gainSum
+                avgDailyGain   = $avgInMonth
             }
         } | Sort-Object month)
 
@@ -654,9 +885,20 @@ try {
     $avgGainText = '-'
     if ($null -ne $avgDailyGain) { $avgGainText = "$avgDailyGain" }
 
+    # 월간 리포트 노트 파일 (reports\monthly-notes\YYYY-MM.md) 이 있으면 읽어서 HTML로 변환
+    $monthlyNotesDir = Join-Path $ReportsDir 'monthly-notes'
+    New-Item -ItemType Directory -Path $monthlyNotesDir -Force | Out-Null
+    $monthlyNotes = @{}
+    Get-ChildItem -Path $monthlyNotesDir -Filter '*.md' -ErrorAction SilentlyContinue | ForEach-Object {
+        $monthlyNotes[$_.BaseName] = ConvertFrom-SimpleMarkdown -Markdown (Get-Content -Path $_.FullName -Raw)
+    }
+    $monthlyNotesJson = $monthlyNotes | ConvertTo-Json -Depth 5 -Compress
+    if (-not $monthlyNotesJson) { $monthlyNotesJson = '{}' }
+
     $historyJsonData = ConvertTo-JsonArraySafe -InputObject $history -Depth 5
     $monthlyJsonData = ConvertTo-JsonArraySafe -InputObject $monthlyGains -Depth 5
     $mediaJsonData = ConvertTo-JsonArraySafe -InputObject $mediaInsights -Depth 5
+    $mediaArchiveJsonData = ConvertTo-JsonArraySafe -InputObject $mediaArchive -Depth 5
 
     $dashboardPath = Join-Path $ReportsDir 'dashboard.html'
     $html = (Get-DashboardHtmlTemplate).
@@ -670,7 +912,9 @@ try {
         Replace('__GENERATED_AT__', $generatedAtUtc.ToLocalTime().ToString('yyyy-MM-dd HH:mm')).
         Replace('__HISTORY_JSON__', $historyJsonData).
         Replace('__MONTHLY_JSON__', $monthlyJsonData).
-        Replace('__MEDIA_JSON__', $mediaJsonData)
+        Replace('__MEDIA_JSON__', $mediaJsonData).
+        Replace('__MEDIA_ARCHIVE_JSON__', $mediaArchiveJsonData).
+        Replace('__MONTHLY_NOTES_JSON__', $monthlyNotesJson)
 
     Set-Content -Path $dashboardPath -Value $html -Encoding UTF8
 
