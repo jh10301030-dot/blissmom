@@ -207,27 +207,59 @@ Write-Host '=== Instagram API 연결 설정 ===' -ForegroundColor Cyan
 Write-Host '로컬 보안 입력창을 엽니다. 토큰/시크릿은 화면·로그에 표시되지 않습니다.' -ForegroundColor DarkGray
 
 $cred = Show-SecureCredentialDialog
-$shortLivedToken = $cred.AccessToken
-$appSecret = $cred.AppSecret
+$shortLivedToken = $cred.AccessToken.Trim()
+$appSecret = $cred.AppSecret.Trim()
 
 try {
-    # 4-1. 단기 토큰 -> 장기 토큰 교환
-    Write-Host '장기 액세스 토큰으로 교환 중...' -ForegroundColor DarkGray
-    $exchangeUri = 'https://graph.instagram.com/access_token' +
-        '?grant_type=ig_exchange_token' +
-        "&client_secret=$([uri]::EscapeDataString($appSecret))" +
-        "&access_token=$([uri]::EscapeDataString($shortLivedToken))"
+    $obtainedAtUtc = (Get-Date).ToUniversalTime()
+    $longLivedToken = $null
+    $expiresAtUtc = $obtainedAtUtc.AddDays(60)
 
-    $exchangeResult = Invoke-IgApi -Uri $exchangeUri
-    $longLivedToken = $exchangeResult.access_token
-    $expiresInSeconds = [int]$exchangeResult.expires_in
-
-    if ([string]::IsNullOrWhiteSpace($longLivedToken)) {
-        throw '장기 토큰 교환 응답에 access_token이 없습니다.'
+    # 4-1a. 먼저 입력된 토큰이 이미 바로 사용 가능한 토큰인지 확인
+    #       (앱 대시보드의 "토큰 생성" 버튼으로 발급한 토큰은 교환 없이 바로 쓸 수 있는 경우가 많음)
+    Write-Host '입력한 토큰이 바로 사용 가능한지 확인하는 중...' -ForegroundColor DarkGray
+    try {
+        $directCheckUri = 'https://graph.instagram.com/me' +
+            '?fields=id' +
+            "&access_token=$([uri]::EscapeDataString($shortLivedToken))"
+        Invoke-IgApi -Uri $directCheckUri | Out-Null
+        $longLivedToken = $shortLivedToken
+        Write-Host '입력한 토큰이 이미 유효합니다. 교환 절차를 건너뜁니다.' -ForegroundColor DarkGray
+    } catch {
+        Write-Host '바로 사용 가능한 토큰이 아닙니다. 단기->장기 토큰 교환을 시도합니다...' -ForegroundColor DarkGray
     }
 
-    $obtainedAtUtc = (Get-Date).ToUniversalTime()
-    $expiresAtUtc = $obtainedAtUtc.AddSeconds($expiresInSeconds)
+    # 4-1b. 바로 쓸 수 없었다면 단기 토큰 -> 장기 토큰 교환 시도
+    if (-not $longLivedToken) {
+        $exchangeUri = 'https://graph.instagram.com/access_token' +
+            '?grant_type=ig_exchange_token' +
+            "&client_secret=$([uri]::EscapeDataString($appSecret))" +
+            "&access_token=$([uri]::EscapeDataString($shortLivedToken))"
+
+        $exchangeResult = Invoke-IgApi -Uri $exchangeUri
+        $longLivedToken = $exchangeResult.access_token
+        $expiresInSeconds = [int]$exchangeResult.expires_in
+
+        if ([string]::IsNullOrWhiteSpace($longLivedToken)) {
+            throw '장기 토큰 교환 응답에 access_token이 없습니다.'
+        }
+        $expiresAtUtc = $obtainedAtUtc.AddSeconds($expiresInSeconds)
+    } else {
+        # 이미 유효한 토큰을 장기 토큰으로 한 번 더 교환 시도 (실패해도 무시하고 원래 토큰 사용)
+        try {
+            $exchangeUri = 'https://graph.instagram.com/access_token' +
+                '?grant_type=ig_exchange_token' +
+                "&client_secret=$([uri]::EscapeDataString($appSecret))" +
+                "&access_token=$([uri]::EscapeDataString($longLivedToken))"
+            $exchangeResult = Invoke-IgApi -Uri $exchangeUri
+            if ($exchangeResult.access_token) {
+                $longLivedToken = $exchangeResult.access_token
+                $expiresAtUtc = $obtainedAtUtc.AddSeconds([int]$exchangeResult.expires_in)
+            }
+        } catch {
+            Write-Host '참고: 장기 토큰 재교환은 건너뛰었습니다(이미 유효한 토큰 사용). 만료일은 60일로 추정합니다.' -ForegroundColor DarkGray
+        }
+    }
 
     # 4-2. 연결 테스트 (instagram_business_basic 권한 확인 겸함)
     Write-Host '계정 연결을 테스트하는 중...' -ForegroundColor DarkGray
