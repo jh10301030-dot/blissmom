@@ -17,26 +17,26 @@
 /** 회사 기본 정보 */
 export const COMPANY = {
   /** 좌측 상단 헤더에 뜨는 회사 이름 */
-  name: "MY AI COMPANY",
+  name: "BLISS.MOM AI COMPANY",
   /** 헤더 로고 배지에 들어갈 글자 1개 (이모지도 됩니다) */
-  logoLetter: "M",
+  logoLetter: "B",
   /** 화면 상단 큰 제목 (앞부분) */
-  titlePrefix: "나의",
+  titlePrefix: "블리스맘의",
   /** 화면 상단 큰 제목 (강조되는 뒷부분) */
   titleAccent: "AI Office",
   /** 브라우저 탭 제목 */
-  pageTitle: "My AI Company — 나의 AI 사무실",
+  pageTitle: "Bliss.mom AI Company — 블리스맘의 AI 오피스",
   /** 검색·공유될 때 뜨는 설명 */
-  description: "12개 AI 팀이 조사·기획·제작·보고까지 돌아가는 1인 크리에이터용 AI 오피스",
+  description: "영유아 엄마들을 위한 쉽고 재미있는 미술놀이 콘텐츠를 만드는 릴스·캐러셀 AI 오피스",
   /** 창 하단 파일명 느낌의 라벨 */
-  windowLabel: "my_ai_company.exe — 대표실",
+  windowLabel: "bliss_mom_office.exe — 대표실",
   /** 일일 브리핑 제목에 들어갈 이름 */
-  reportName: "AI Office",
+  reportName: "Bliss.mom AI Office",
 } as const;
 
 /** 대표(나) — 사무실 대표실에 앉아 있는 캐릭터 */
 export const CEO_PROFILE = {
-  name: "김대표",
+  name: "블리스맘",
   callsign: "대표님",
   role: "대표 · 최종 의사결정",
   hair: "#42283a",
@@ -46,7 +46,7 @@ export const CEO_PROFILE = {
   thoughts: [
     "AI는 비서, 최종 결정은 내가 해요.",
     "오늘 결정할 건 딱 1개만 남기자.",
-    "저장될 만한 콘텐츠인지부터 본다.",
+    "확산이 목표, 한 콘텐츠엔 한 목적만 담자.",
   ],
 };
 
@@ -61,7 +61,7 @@ export const DEPARTMENTS = [
     name: "시장조사팀",
     short: "trend.lab",
     icon: "🔎",
-    task: "업계 뉴스·트렌드 수집",
+    task: "핀터레스트·페북·인스타 외국 놀이 5개 수집",
     report: "출처를 검증하고 오늘의 후보를 정리해요.",
   },
   {
@@ -69,7 +69,7 @@ export const DEPARTMENTS = [
     name: "브랜드 분석팀",
     short: "brand.room",
     icon: "🧬",
-    task: "채널 흐름·정체성 점검",
+    task: "베스트 컨텐츠 3가지 추리기",
     report: "지표 연동이 되면 수치까지 붙습니다.",
   },
   {
@@ -82,7 +82,7 @@ export const DEPARTMENTS = [
   },
   {
     id: "qa",
-    name: "품질 검수팀",
+    name: "브랜드 검수팀",
     short: "qa.check",
     icon: "🛡️",
     task: "근거·중복·톤 검사",
@@ -93,7 +93,7 @@ export const DEPARTMENTS = [
     name: "기획 2팀",
     short: "script.team",
     icon: "✍️",
-    task: "승인된 안 원고 작성",
+    task: "훅 → 문제 → 해결 구조로 원고 작성",
     report: "대표가 고른 아이디어만 글로 옮겨요.",
   },
   {
@@ -101,7 +101,7 @@ export const DEPARTMENTS = [
     name: "영상 제작팀",
     short: "video.edit",
     icon: "🎬",
-    task: "영상 원본 접수·초안 편집",
+    task: "영상 20~30초 초안 편집",
     report: "원본은 보존하고 편집본만 새로 만들어요.",
   },
   {
