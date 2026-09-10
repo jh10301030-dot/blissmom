@@ -868,7 +868,10 @@ try {
     if (Test-Path $historyPath) {
         try { $history = @(Get-Content -Path $historyPath -Raw | ConvertFrom-Json) } catch { $history = @() }
     }
-    $history = @($history | Where-Object { $_.date -ne $todayKey })
+    # 예전 버그로 생긴 손상된 기록(date 가 문자열이 아니거나 형식이 안 맞음)은 걸러낸다
+    $history = @($history | Where-Object {
+        $_.date -is [string] -and $_.date -match '^\d{4}-\d{2}-\d{2}$' -and $_.date -ne $todayKey
+    })
     $history += [PSCustomObject]@{
         date           = $todayKey
         followersCount = $profile.followers_count

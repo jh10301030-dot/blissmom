@@ -123,7 +123,10 @@ try {
     $historyByDate = @{}
     foreach ($h in $history) {
         $hNorm = $h | Select-Object date, followersCount, followersDelta, totalReach, totalSaved, totalShares, mediaCount
-        if ($hNorm.date) { $historyByDate[$hNorm.date] = $hNorm }
+        # 예전 버그로 생긴 손상된 기록(date 가 문자열이 아니거나 형식이 안 맞음)은 걸러낸다
+        if ($hNorm.date -is [string] -and $hNorm.date -match '^\d{4}-\d{2}-\d{2}$') {
+            $historyByDate[$hNorm.date] = $hNorm
+        }
     }
 
     # 계정 레벨 일별 팔로워 순증감(follower_count) 조회 - 25일씩 구간을 나눠서 요청
