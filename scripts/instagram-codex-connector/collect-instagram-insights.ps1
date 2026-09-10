@@ -402,7 +402,8 @@ function Get-DashboardHtmlTemplate {
             backgroundColor: 'rgba(236,72,153,0.12)',
             fill: true,
             tension: 0.25,
-            pointRadius: 0
+            pointRadius: history.length > 14 ? 0 : 4,
+            pointBackgroundColor: '#ec4899'
           }]
         },
         options: {
@@ -410,6 +411,9 @@ function Get-DashboardHtmlTemplate {
           scales: { y: { beginAtZero: false } }
         }
       });
+      if (history.length === 1) {
+        document.getElementById('growthChart').insertAdjacentHTML('afterend', '<p style="color:#9ca3af;font-size:13px">아직 하루치 데이터라 점 하나만 보입니다. 매일 쌓이면 선 그래프가 됩니다.</p>');
+      }
     } else {
       document.getElementById('growthChart').insertAdjacentHTML('afterend', '<p style="color:#9ca3af;font-size:13px">데이터가 더 쌓이면 그래프가 표시됩니다.</p>');
     }
