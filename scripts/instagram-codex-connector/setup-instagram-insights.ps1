@@ -181,13 +181,20 @@ function Invoke-IgApi {
         try { $status = [int]$_.Exception.Response.StatusCode } catch { }
 
         $body = $null
-        try {
-            $stream = $_.Exception.Response.GetResponseStream()
-            $reader = New-Object System.IO.StreamReader($stream)
-            $body = $reader.ReadToEnd()
-        } catch { }
+        if ($_.ErrorDetails -and $_.ErrorDetails.Message) {
+            $body = $_.ErrorDetails.Message
+        }
+        if (-not $body) {
+            try {
+                $stream = $_.Exception.Response.GetResponseStream()
+                if ($stream.CanSeek) { $stream.Position = 0 }
+                $reader = New-Object System.IO.StreamReader($stream)
+                $body = $reader.ReadToEnd()
+            } catch { }
+        }
 
-        $safeBody = if ($body) { Redact-Secret -Text $body } else { '(응답 본문 없음)' }
+        $safeBody = '(응답 본문 없음)'
+        if ($body) { $safeBody = Redact-Secret -Text $body }
         throw "Instagram API 호출 실패 (HTTP $status): $safeBody"
     }
 }
