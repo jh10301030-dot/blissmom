@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>갓생맘 대시보드</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="tabbar">
+      <button class="tab active" data-tab="daily">📈 일별 지표</button>
+      <button class="tab" data-tab="monthly">📋 월간 리포트</button>
+    </header>
+
+    <main id="view-daily" class="view">
+      <section class="card">
+        <div class="file-label">DAILY_METRICS.EXE</div>
+        <h1 class="title">갓생맘 일별 지표 <span id="headline-diff" class="accent"></span></h1>
+        <p class="subtitle" id="headline-sub"></p>
+        <div class="badge-row">
+          <span class="badge" id="tracking-badge"></span>
+        </div>
+        <div class="stat-grid" id="stat-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="file-label">GROWTH_CHART.PNG</div>
+        <div class="chart-wrap">
+          <svg id="growth-chart" viewBox="0 0 1000 320" preserveAspectRatio="none"></svg>
+          <div id="chart-tooltip" class="chart-tooltip" hidden></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="file-label">MONTHLY_GAIN.CSV</div>
+        <div class="bar-chart" id="bar-chart"></div>
+      </section>
+
+      <section class="card">
+        <div class="file-label">DAILY_LOG.CSV</div>
+        <div class="log-controls">
+          <div class="pill-group" id="month-filter"></div>
+          <label class="toggle-pill">
+            <input type="checkbox" id="published-only" />
+            <span>📌 발행일만</span>
+          </label>
+          <input type="search" id="log-search" class="search-input" placeholder="콘텐츠 검색..." />
+        </div>
+        <div class="table-scroll">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>요일</th>
+                <th>팔로워</th>
+                <th>전일 대비</th>
+                <th>도달</th>
+                <th>프로필<br />방문</th>
+                <th>링크<br />클릭</th>
+                <th>콘텐츠</th>
+              </tr>
+            </thead>
+            <tbody id="log-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <main id="view-monthly" class="view" hidden>
+      <div id="report-list"></div>
+    </main>
+  </div>
+
+  <script src="data/daily-log.js"></script>
+  <script src="data/reports.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
