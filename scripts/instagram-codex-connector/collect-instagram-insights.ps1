@@ -90,6 +90,22 @@ function Invoke-IgApi {
     }
 }
 
+function ConvertTo-JsonArraySafe {
+    # PowerShell 5.1의 ConvertTo-Json은 원소가 1개인 배열을 배열이 아닌 단일 객체로
+    # 직렬화해버리는 경우가 있어(대시보드 JS가 배열 메서드를 호출하다 깨짐), 결과 문자열이
+    # '['로 시작하지 않으면 강제로 대괄호를 씌워 항상 JSON 배열이 되도록 보정한다.
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][array]$InputObject,
+        [int]$Depth = 5
+    )
+    if ($InputObject.Count -eq 0) { return '[]' }
+    $json = ConvertTo-Json -InputObject $InputObject -Depth $Depth -Compress
+    if ($InputObject.Count -eq 1 -and -not $json.TrimStart().StartsWith('[')) {
+        $json = "[$json]"
+    }
+    return $json
+}
+
 function Get-DashboardHtmlTemplate {
     @'
 <!doctype html>
@@ -262,67 +278,81 @@ function Get-DashboardHtmlTemplate {
     return d + ' (' + weekdayNames[dt.getDay()] + ')';
   }
 
-  if (typeof Chart !== 'undefined' && history.length > 0) {
-    var ctx1 = document.getElementById('growthChart').getContext('2d');
-    new Chart(ctx1, {
-      type: 'line',
-      data: {
-        labels: history.map(function (h) { return h.date; }),
-        datasets: [{
-          label: '팔로워',
-          data: history.map(function (h) { return h.followersCount; }),
-          borderColor: '#ec4899',
-          backgroundColor: 'rgba(236,72,153,0.12)',
-          fill: true,
-          tension: 0.25,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: false } }
-      }
+  try {
+    if (typeof Chart !== 'undefined' && history.length > 0) {
+      var ctx1 = document.getElementById('growthChart').getContext('2d');
+      new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: history.map(function (h) { return h.date; }),
+          datasets: [{
+            label: '팔로워',
+            data: history.map(function (h) { return h.followersCount; }),
+            borderColor: '#ec4899',
+            backgroundColor: 'rgba(236,72,153,0.12)',
+            fill: true,
+            tension: 0.25,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: false } }
+        }
+      });
+    } else {
+      document.getElementById('growthChart').insertAdjacentHTML('afterend', '<p style="color:#9ca3af;font-size:13px">데이터가 더 쌓이면 그래프가 표시됩니다.</p>');
+    }
+  } catch (e) { console.error('growth chart error', e); }
+
+  try {
+    if (typeof Chart !== 'undefined' && monthly.length > 0) {
+      var ctx2 = document.getElementById('monthlyChart').getContext('2d');
+      new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: monthly.map(function (m) { return m.month; }),
+          datasets: [{
+            label: '월별 순증',
+            data: monthly.map(function (m) { return m.gain; }),
+            backgroundColor: '#ec4899',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } }
+        }
+      });
+    } else {
+      document.getElementById('monthlyChart').insertAdjacentHTML('afterend', '<p style="color:#9ca3af;font-size:13px">데이터가 더 쌓이면 그래프가 표시됩니다.</p>');
+    }
+  } catch (e) { console.error('monthly chart error', e); }
+
+  try {
+    var grid = document.getElementById('mediaGrid');
+    if (media.length === 0) {
+      grid.innerHTML = '<p style="color:#9ca3af;font-size:13px">최근 콘텐츠가 없습니다.</p>';
+    }
+    media.forEach(function (m) {
+      var a = document.createElement('a');
+      a.href = m.permalink || '#';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.className = 'media-card';
+      var img = m.thumbnailUrl ? '<img src="' + m.thumbnailUrl + '" loading="lazy">' : '';
+      var caption = (m.caption || '(캡션 없음)').toString();
+      a.innerHTML = img +
+        '<div class="body">' +
+        '<div class="caption">' + caption.replace(/</g, '&lt;') + '</div>' +
+        '<div class="metrics">조회 ' + m.views + ' · 도달 ' + m.reach + ' · 저장 ' + m.saved + ' · 공유 ' + m.shares + '</div>' +
+        '</div>';
+      grid.appendChild(a);
     });
-  }
+  } catch (e) { console.error('media grid error', e); }
 
-  if (typeof Chart !== 'undefined' && monthly.length > 0) {
-    var ctx2 = document.getElementById('monthlyChart').getContext('2d');
-    new Chart(ctx2, {
-      type: 'bar',
-      data: {
-        labels: monthly.map(function (m) { return m.month; }),
-        datasets: [{
-          label: '월별 순증',
-          data: monthly.map(function (m) { return m.gain; }),
-          backgroundColor: '#ec4899',
-          borderRadius: 6
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
-
-  var grid = document.getElementById('mediaGrid');
-  media.forEach(function (m) {
-    var a = document.createElement('a');
-    a.href = m.permalink || '#';
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.className = 'media-card';
-    var img = m.thumbnailUrl ? '<img src="' + m.thumbnailUrl + '" loading="lazy">' : '';
-    var caption = (m.caption || '(캡션 없음)').toString();
-    a.innerHTML = img +
-      '<div class="body">' +
-      '<div class="caption">' + caption.replace(/</g, '&lt;') + '</div>' +
-      '<div class="metrics">조회 ' + m.views + ' · 도달 ' + m.reach + ' · 저장 ' + m.saved + ' · 공유 ' + m.shares + '</div>' +
-      '</div>';
-    grid.appendChild(a);
-  });
-
-  var tbody = document.querySelector('#dailyLogTable tbody');
-  history.slice().reverse().forEach(function (h) {
+  try {
+    var tbody = document.querySelector('#dailyLogTable tbody');
+    history.slice().reverse().forEach(function (h) {
     var tr = document.createElement('tr');
     var delta = (h.followersDelta === null || h.followersDelta === undefined) ? '-' :
       (h.followersDelta > 0 ? '+' + h.followersDelta : h.followersDelta);
@@ -334,7 +364,8 @@ function Get-DashboardHtmlTemplate {
       '<td>' + h.totalSaved + '</td>' +
       '<td>' + h.totalShares + '</td>';
     tbody.appendChild(tr);
-  });
+    });
+  } catch (e) { console.error('daily log table error', e); }
 </script>
 </body>
 </html>
@@ -588,7 +619,7 @@ try {
         mediaCount     = $profile.media_count
     }
     $history = @($history | Sort-Object { [DateTime]$_.date })
-    ConvertTo-Json -InputObject $history -Depth 5 | Set-Content -Path $historyPath -Encoding UTF8
+    Set-Content -Path $historyPath -Value (ConvertTo-JsonArraySafe -InputObject $history -Depth 5) -Encoding UTF8
 
     # -----------------------------------------------------------------------
     # 9. 대시보드(HTML) 생성 - 팔로워 성장 그래프 + 콘텐츠 성과
@@ -623,12 +654,9 @@ try {
     $avgGainText = '-'
     if ($null -ne $avgDailyGain) { $avgGainText = "$avgDailyGain" }
 
-    $historyJsonData = ConvertTo-Json -InputObject $history -Depth 5 -Compress
-    $monthlyJsonData = ConvertTo-Json -InputObject $monthlyGains -Depth 5 -Compress
-    $mediaJsonData = ConvertTo-Json -InputObject $mediaInsights -Depth 5 -Compress
-    if (-not $historyJsonData) { $historyJsonData = '[]' }
-    if (-not $monthlyJsonData) { $monthlyJsonData = '[]' }
-    if (-not $mediaJsonData) { $mediaJsonData = '[]' }
+    $historyJsonData = ConvertTo-JsonArraySafe -InputObject $history -Depth 5
+    $monthlyJsonData = ConvertTo-JsonArraySafe -InputObject $monthlyGains -Depth 5
+    $mediaJsonData = ConvertTo-JsonArraySafe -InputObject $mediaInsights -Depth 5
 
     $dashboardPath = Join-Path $ReportsDir 'dashboard.html'
     $html = (Get-DashboardHtmlTemplate).
@@ -647,7 +675,19 @@ try {
     Set-Content -Path $dashboardPath -Value $html -Encoding UTF8
 
     # -----------------------------------------------------------------------
-    # 10. 콘솔 요약 (비밀값 절대 미출력)
+    # 10. 노션(Notion) 동기화 (설정되어 있을 때만, 실패해도 전체 흐름은 계속)
+    # -----------------------------------------------------------------------
+    try {
+        $notionSyncScript = Join-Path $PSScriptRoot 'sync-to-notion.ps1'
+        if (Test-Path $notionSyncScript) {
+            & $notionSyncScript
+        }
+    } catch {
+        Write-Warning "Notion 동기화 단계에서 오류(무시하고 계속): $($_.Exception.Message)"
+    }
+
+    # -----------------------------------------------------------------------
+    # 11. 콘솔 요약 (비밀값 절대 미출력)
     # -----------------------------------------------------------------------
     Write-Host ''
     Write-Host '=== 수집 완료 ===' -ForegroundColor Green

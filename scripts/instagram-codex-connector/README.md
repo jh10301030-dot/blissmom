@@ -14,7 +14,20 @@ Windows PC에서 Instagram Graph API(Instagram Login) 연결을 설정하고,
 | `collect-instagram-insights.ps1` | 팔로워 수(전날 대비 증감 포함) + 최근 콘텐츠 5개의 조회/도달/저장/공유 데이터를 "아침 브리프" 형태의 JSON/Markdown으로 저장. 만료 10일 이내면 토큰을 자동 갱신 |
 | `register-daily-brief.ps1` | `collect-instagram-insights.ps1`을 매일 오전 8시(기본값)에 자동 실행하도록 Windows 작업 스케줄러에 등록 (토큰/시크릿을 다루지 않는 별도 스크립트) |
 | `make-desktop-shortcut.ps1` | 바탕화면에 최신 대시보드를 여는 바로가기 아이콘 생성 |
-| `1_연결설정.bat` / `2_인사이트수집.bat` / `3_아침브리프_자동등록.bat` / `4_결과보기.bat` / `5_바탕화면_바로가기_만들기.bat` | 위 스크립트들을 더블클릭만으로 실행하기 위한 실행기 |
+| `setup-notion-sync.ps1` | 노션 통합 토큰을 입력받아 "블리스맘 오피스 > 성과" 페이지 연동을 설정 |
+| `sync-to-notion.ps1` | `collect-instagram-insights.ps1` 실행 시 자동 호출되어 노션 페이지의 요약/일별 표를 갱신 (노션 연동 미설정 시 조용히 건너뜀) |
+| `1_연결설정.bat` / `2_인사이트수집.bat` / `3_아침브리프_자동등록.bat` / `4_결과보기.bat` / `5_바탕화면_바로가기_만들기.bat` / `6_노션연동설정.bat` | 위 스크립트들을 더블클릭만으로 실행하기 위한 실행기 |
+
+## 노션(Notion) 자동 동기화 설정
+
+1. https://www.notion.so/my-integrations 에서 "New integration" 클릭 → 이름 지정 후 생성
+2. 생성된 통합의 "Internal Integration Secret" 복사 (`ntn_`으로 시작)
+3. 노션에서 "블리스맘 오피스 > 성과" 페이지를 열고, 우측 상단 `...` → "연결 추가"에서
+   방금 만든 통합을 추가 (이 단계가 없으면 API가 403/404로 접근을 거부합니다)
+4. `6_노션연동설정.bat` 실행 → 위에서 복사한 시크릿 입력
+
+이후 `2_인사이트수집.bat`(또는 매일 자동 브리프)을 실행할 때마다 노션 페이지의
+상단 요약과 일별 로그 표가 자동으로 최신 상태로 갱신됩니다.
 
 `collect-instagram-insights.ps1`을 실행할 때마다 `reports\dashboard.html` 이 생성/갱신됩니다.
 팔로워 성장 그래프, 월별 순증, 최근 콘텐츠 카드, 일별 로그 표가 있는 시각적 대시보드로,
