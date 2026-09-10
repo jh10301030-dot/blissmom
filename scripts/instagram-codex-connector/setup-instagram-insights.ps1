@@ -263,10 +263,18 @@ try {
 
     # 4-2. 연결 테스트 (instagram_business_basic 권한 확인 겸함)
     Write-Host '계정 연결을 테스트하는 중...' -ForegroundColor DarkGray
-    $meUri = 'https://graph.instagram.com/me' +
-        '?fields=id,username,account_type' +
-        "&access_token=$([uri]::EscapeDataString($longLivedToken))"
-    $me = Invoke-IgApi -Uri $meUri
+    try {
+        $meUri = 'https://graph.instagram.com/me' +
+            '?fields=id,username,name,account_type,followers_count,media_count' +
+            "&access_token=$([uri]::EscapeDataString($longLivedToken))"
+        $me = Invoke-IgApi -Uri $meUri
+    } catch {
+        # 일부 계정/권한에서는 followers_count 등이 지원되지 않을 수 있어 최소 필드로 재시도
+        $meUri = 'https://graph.instagram.com/me' +
+            '?fields=id,username,account_type' +
+            "&access_token=$([uri]::EscapeDataString($longLivedToken))"
+        $me = Invoke-IgApi -Uri $meUri
+    }
 
     $basicScopeOk = -not [string]::IsNullOrWhiteSpace($me.id)
 
@@ -326,6 +334,31 @@ try {
     Write-Host "instagram_business_manage_insights : $insightsScopeOk"
     Write-Host ''
     Write-Host "설정 파일: $ConfigPath (토큰/시크릿은 현재 Windows 계정으로만 복호화 가능)" -ForegroundColor DarkGray
+
+    # 4-6. 완료 알림 팝업 (비밀값 없음, 계정명/팔로워 수/성공 여부만)
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $displayName = if ($me.name) { $me.name } else { $me.username }
+        $popupLines = @(
+            '연결됐습니다.',
+            "계정: @$($me.username)"
+        )
+        if ($null -ne $me.followers_count) {
+            $popupLines += "팔로워: $($me.followers_count)명"
+        }
+        $popupLines += ''
+        $popupLines += '이 창을 닫아도 됩니다.'
+        $popupMessage = [string]::Join([Environment]::NewLine, $popupLines)
+
+        [System.Windows.Forms.MessageBox]::Show(
+            $popupMessage,
+            "$displayName 인스타 연결 완료",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Information
+        ) | Out-Null
+    } catch {
+        Write-Warning "완료 알림 팝업 표시 실패(연결 자체는 성공): $($_.Exception.Message)"
+    }
 
 } finally {
     # 메모리상 평문 변수 제거 (최선 노력)
