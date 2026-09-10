@@ -241,9 +241,8 @@ Set-Content -Path $mdPath -Value $md.ToString() -Encoding UTF8
 $expiresDisplay = if ($expiresAtUtc) { $expiresAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm") } else { "알 수 없음" }
 
 Write-Host ""
-Write-Host "=== Instagram Insights 수집 완료 ===" -ForegroundColor Green
-Write-Host "계정명         : $($igProfile.username)"
-Write-Host "연결 성공 여부 : $connectionOk"
-Write-Host "토큰 만료일    : $expiresDisplay"
-Write-Host "JSON 리포트    : $jsonPath"
-Write-Host "Markdown 리포트: $mdPath"
+Write-Host "$($igProfile.username) 인스타 성과 연결" -ForegroundColor Green
+Write-Host "  연결 상태 : $(if ($connectionOk) { '성공' } else { '실패' })"
+Write-Host "  토큰 만료일: $expiresDisplay"
+Write-Host "  JSON 리포트 : $jsonPath"
+Write-Host "  Markdown 리포트: $mdPath"

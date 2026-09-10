@@ -86,54 +86,70 @@ function Show-CredentialInputDialog {
     Add-Type -AssemblyName System.Drawing
 
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Instagram API Connector - 최초 설정"
-    $form.Size = New-Object System.Drawing.Size(460, 240)
+    $form.Text = "인스타 성과 자동보고 연결"
+    $form.Size = New-Object System.Drawing.Size(480, 340)
     $form.StartPosition = "CenterScreen"
     $form.FormBorderStyle = "FixedDialog"
     $form.MaximizeBox = $false
     $form.MinimizeBox = $false
     $form.TopMost = $true
 
+    $lblHeader = New-Object System.Windows.Forms.Label
+    $lblHeader.Text = "인스타 성과 자동보고 연결"
+    $lblHeader.Font = New-Object System.Drawing.Font($lblHeader.Font.FontFamily, 12, [System.Drawing.FontStyle]::Bold)
+    $lblHeader.Location = New-Object System.Drawing.Point(15, 15)
+    $lblHeader.AutoSize = $true
+    $form.Controls.Add($lblHeader)
+
+    $lblDesc = New-Object System.Windows.Forms.Label
+    $lblDesc.Text = "Meta에서 방금 만든 액세스 토큰과 Instagram 앱 시크릿 코드를 붙여넣으세요.`r`n값은 채팅이나 저장소에 남지 않고, 이 Windows 사용자만 열 수 있게 암호화됩니다."
+    $lblDesc.Location = New-Object System.Drawing.Point(15, 45)
+    $lblDesc.Size = New-Object System.Drawing.Size(440, 45)
+    $form.Controls.Add($lblDesc)
+
     $lblToken = New-Object System.Windows.Forms.Label
-    $lblToken.Text = "Instagram 액세스 토큰:"
-    $lblToken.Location = New-Object System.Drawing.Point(15, 20)
+    $lblToken.Text = "액세스 토큰"
+    $lblToken.Location = New-Object System.Drawing.Point(15, 100)
     $lblToken.AutoSize = $true
     $form.Controls.Add($lblToken)
 
     $txtToken = New-Object System.Windows.Forms.TextBox
-    $txtToken.Location = New-Object System.Drawing.Point(15, 45)
-    $txtToken.Size = New-Object System.Drawing.Size(420, 24)
+    $txtToken.Location = New-Object System.Drawing.Point(15, 122)
+    $txtToken.Size = New-Object System.Drawing.Size(440, 24)
     $txtToken.UseSystemPasswordChar = $true
     $form.Controls.Add($txtToken)
 
     $lblSecret = New-Object System.Windows.Forms.Label
-    $lblSecret.Text = "Instagram 앱 시크릿:"
-    $lblSecret.Location = New-Object System.Drawing.Point(15, 85)
+    $lblSecret.Text = "Instagram 앱 시크릿 코드"
+    $lblSecret.Location = New-Object System.Drawing.Point(15, 155)
     $lblSecret.AutoSize = $true
     $form.Controls.Add($lblSecret)
 
     $txtSecret = New-Object System.Windows.Forms.TextBox
-    $txtSecret.Location = New-Object System.Drawing.Point(15, 110)
-    $txtSecret.Size = New-Object System.Drawing.Size(420, 24)
+    $txtSecret.Location = New-Object System.Drawing.Point(15, 177)
+    $txtSecret.Size = New-Object System.Drawing.Size(440, 24)
     $txtSecret.UseSystemPasswordChar = $true
     $form.Controls.Add($txtSecret)
 
-    $lblNote = New-Object System.Windows.Forms.Label
-    $lblNote.Text = "입력값은 이 PC의 현재 Windows 계정에서만 복호화 가능하도록 DPAPI로 암호화되어 저장됩니다."
-    $lblNote.Location = New-Object System.Drawing.Point(15, 140)
-    $lblNote.Size = New-Object System.Drawing.Size(420, 40)
-    $form.Controls.Add($lblNote)
+    $lblHelper = New-Object System.Windows.Forms.Label
+    $lblHelper.Text = "두 값을 입력한 뒤 아래 버튼을 눌러주세요."
+    $lblHelper.Location = New-Object System.Drawing.Point(15, 210)
+    $lblHelper.Size = New-Object System.Drawing.Size(440, 20)
+    $lblHelper.ForeColor = [System.Drawing.Color]::DimGray
+    $form.Controls.Add($lblHelper)
 
     $btnOk = New-Object System.Windows.Forms.Button
-    $btnOk.Text = "저장 및 연결"
-    $btnOk.Location = New-Object System.Drawing.Point(255, 185)
+    $btnOk.Text = "저장하고 연결 테스트"
+    $btnOk.Location = New-Object System.Drawing.Point(170, 245)
+    $btnOk.Size = New-Object System.Drawing.Size(180, 32)
     $btnOk.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $form.Controls.Add($btnOk)
     $form.AcceptButton = $btnOk
 
     $btnCancel = New-Object System.Windows.Forms.Button
     $btnCancel.Text = "취소"
-    $btnCancel.Location = New-Object System.Drawing.Point(360, 185)
+    $btnCancel.Location = New-Object System.Drawing.Point(365, 245)
+    $btnCancel.Size = New-Object System.Drawing.Size(80, 32)
     $btnCancel.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $form.Controls.Add($btnCancel)
     $form.CancelButton = $btnCancel
@@ -332,10 +348,10 @@ if ($RegisterDailyTask) {
 $expiresDisplay = if ($expiresAt) { $expiresAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") } else { "알 수 없음 (다음 실행 시 갱신 시도)" }
 
 Write-Host ""
-Write-Host "=== Instagram API Connector 설정 완료 ===" -ForegroundColor Green
-Write-Host "계정명            : $username"
-Write-Host "연결 성공 여부    : $connectionOk"
-Write-Host "토큰 만료일       : $expiresDisplay"
-Write-Host "instagram_business_basic 권한           : $permBasic"
-Write-Host "instagram_business_manage_insights 권한 : $permInsights"
-Write-Host "설정 파일         : $ConfigPath"
+Write-Host "$username 인스타 성과 연결" -ForegroundColor Green
+Write-Host "  연결 상태 : $(if ($connectionOk) { '성공' } else { '실패' })"
+Write-Host "  토큰 만료일: $expiresDisplay"
+Write-Host "  권한 확인 : instagram_business_basic=$permBasic, instagram_business_manage_insights=$permInsights"
+Write-Host "  설정 파일 : $ConfigPath"
+Write-Host ""
+Write-Host "이제부터 collect-instagram-insights.ps1 을 실행하면 저장된 이 연결을 그대로 사용합니다."
