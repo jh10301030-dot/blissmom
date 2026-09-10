@@ -1,0 +1,8 @@
+config.json
+data/*.csv
+data/*.json
+thumbs/*.jpg
+logs/
+dashboard.html
+__pycache__/
+*.pyc

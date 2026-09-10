@@ -1,0 +1,8 @@
+{
+  "access_token": "<여기에 인스타그램(페이스북) 액세스 토큰을 붙여넣으세요>",
+  "ig_user_id": "",
+  "api_version": "v21.0",
+  "daily_record_hour": 9,
+  "media_fetch_limit": 100,
+  "recent_days_for_media_insights": 21
+}
