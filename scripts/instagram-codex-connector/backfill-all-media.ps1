@@ -116,19 +116,42 @@ try {
     Write-Host '게시물 목록을 가져오는 중... (게시물이 많으면 시간이 걸립니다)' -ForegroundColor DarkGray
 
     $allMediaBasic = @()
-    $pageUri = 'https://graph.instagram.com/me/media' +
-        '?fields=id,caption,media_type,media_product_type,permalink,timestamp,media_url,thumbnail_url&limit=50' +
-        "&access_token=$([uri]::EscapeDataString($accessToken))"
-
+    $pageLimit = 25
+    $afterCursor = $null
     $pageNum = 0
-    while ($pageUri) {
+    $listFields = 'id,caption,media_type,media_product_type,permalink,timestamp,media_url,thumbnail_url'
+
+    while ($true) {
         $pageNum++
-        Write-Host "  목록 $pageNum 페이지 조회 중... (누적 $($allMediaBasic.Count)개)" -ForegroundColor DarkGray
-        $page = Invoke-IgApi -Uri $pageUri
-        $allMediaBasic += $page.data
-        $pageUri = $null
-        if ($page.paging -and $page.paging.next) { $pageUri = $page.paging.next }
-        Start-Sleep -Milliseconds 200
+        Write-Host "  목록 $pageNum 페이지 조회 중... (누적 $($allMediaBasic.Count)개, 페이지 크기 $pageLimit)" -ForegroundColor DarkGray
+
+        $pageUri = 'https://graph.instagram.com/me/media' +
+            "?fields=$listFields&limit=$pageLimit" +
+            "&access_token=$([uri]::EscapeDataString($accessToken))"
+        if ($afterCursor) { $pageUri += "&after=$afterCursor" }
+
+        try {
+            $page = Invoke-IgApi -Uri $pageUri
+        } catch {
+            # "데이터를 줄여서 다시 요청하라"는 오류면 페이지 크기를 절반으로 줄여 같은 지점부터 재시도
+            if ($_.Exception.Message -match '(?i)reduce the amount|"code"\s*:\s*1\b' -and $pageLimit -gt 5) {
+                $pageLimit = [math]::Max(5, [int]($pageLimit / 2))
+                Write-Warning "한 번에 가져오는 양이 너무 많아 페이지 크기를 $pageLimit 로 줄여 재시도합니다..."
+                Start-Sleep -Seconds 2
+                $pageNum--
+                continue
+            }
+            throw
+        }
+
+        if ($page.data) { $allMediaBasic += $page.data }
+
+        if ($page.paging -and $page.paging.next -and $page.paging.cursors -and $page.paging.cursors.after) {
+            $afterCursor = $page.paging.cursors.after
+        } else {
+            break
+        }
+        Start-Sleep -Milliseconds 300
     }
 
     Write-Host "총 $($allMediaBasic.Count)개 게시물 발견. 성과 분석을 시작합니다..." -ForegroundColor Green
