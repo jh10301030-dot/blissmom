@@ -728,7 +728,10 @@ try {
         try { $mediaArchive = @(Get-Content -Path $mediaArchivePath -Raw | ConvertFrom-Json) } catch { $mediaArchive = @() }
     }
     $archiveById = [ordered]@{}
-    foreach ($m in $mediaArchive) { $archiveById[$m.id] = $m }
+    foreach ($m in $mediaArchive) {
+        $mNorm = $m | Select-Object id, mediaType, mediaProductType, timestamp, permalink, caption, thumbnailUrl, views, reach, saved, shares, insightNote
+        if ($mNorm.id) { $archiveById[$mNorm.id] = $mNorm }
+    }
     foreach ($m in $mediaInsights) { $archiveById[$m.id] = $m }
     $mediaArchive = @($archiveById.Values)
     Set-Content -Path $mediaArchivePath -Value (ConvertTo-JsonArraySafe -InputObject $mediaArchive -Depth 5) -Encoding UTF8

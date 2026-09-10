@@ -104,7 +104,10 @@ try {
         try { $archive = @(Get-Content -Path $ArchivePath -Raw | ConvertFrom-Json) } catch { $archive = @() }
     }
     $archiveById = [ordered]@{}
-    foreach ($m in $archive) { $archiveById[$m.id] = $m }
+    foreach ($m in $archive) {
+        $mNorm = $m | Select-Object id, mediaType, mediaProductType, timestamp, permalink, caption, thumbnailUrl, views, reach, saved, shares, insightNote
+        if ($mNorm.id) { $archiveById[$mNorm.id] = $mNorm }
+    }
 
     $metricSets = @(
         @('views', 'reach', 'saved', 'shares'),
