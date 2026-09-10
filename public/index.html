@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>blissmom · 인스타그램 성과 대시보드</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <h1>blissmom 인스타그램 성과 대시보드<span id="demo-badge" class="badge" hidden>DEMO 모드</span></h1>
+        <div>
+          <span id="follower-count" class="follower-stat">-</span>
+          <span id="follower-delta" class="follower-delta"></span>
+        </div>
+      </div>
+      <div class="actions-row">
+        <button id="refresh-btn" class="primary">지금 데이터 새로고침</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2><span>📋 오늘의 브리프 (매일 08:00)</span>
+          <button id="daily-regen">다시 생성</button>
+        </h2>
+        <div id="daily-summary" class="summary-text">불러오는 중...</div>
+      </div>
+
+      <div class="card">
+        <h2><span>🗓️ 주간 성과 보고서 (매주 월 09:00)</span>
+          <button id="weekly-regen">다시 생성</button>
+        </h2>
+        <div id="weekly-summary" class="summary-text">불러오는 중...</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>🔥 조회수 급상승 알림</h2>
+        <div id="spike-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>🏆 이번 주 TOP 3 콘텐츠</h2>
+        <ol id="top-list" class="rank-list"></ol>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h2>📊 최근 게시물 5개 성과 비교 (조회 · 도달 · 저장 · 공유)</h2>
+      <div style="overflow-x:auto;">
+        <table id="recent-table">
+          <thead>
+            <tr><th>게시물</th><th>유형</th><th>게시일</th><th>조회</th><th>도달</th><th>저장</th><th>공유</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card chart-card" style="grid-column: 1 / -1;">
+        <h2>📈 팔로워 증가 &amp; 콘텐츠 발행 기록</h2>
+        <canvas id="timeline-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>💾 저장률 높은 콘텐츠의 공통점</h2>
+        <div id="save-rate-analysis"></div>
+      </div>
+
+      <div class="card">
+        <h2>💡 다음 콘텐츠 주제 추천</h2>
+        <ol id="recommendation-list" class="rank-list"></ol>
+      </div>
+    </div>
+
+    <footer>blissmom Instagram Analytics · <span id="status-line"></span></footer>
+  </div>
+
+  <script src="/vendor/chart.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
