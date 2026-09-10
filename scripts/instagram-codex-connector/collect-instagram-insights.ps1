@@ -482,19 +482,47 @@ function Get-DashboardHtmlTemplate {
   } catch (e) { console.error('daily log table error', e); }
 
   try {
+    var MONTHS_TO_SHOW = 3;
+
     function fmtMonthTitle(m) {
       var parts = m.split('-');
       return parseInt(parts[0], 10) + '년 ' + parseInt(parts[1], 10) + '월';
     }
 
+    function getRecentMonthKeys(n) {
+      var keys = [];
+      var now = new Date();
+      var y = now.getFullYear();
+      var m = now.getMonth() + 1;
+      for (var i = 0; i < n; i++) {
+        keys.push(y + '-' + (m < 10 ? '0' + m : m));
+        m -= 1;
+        if (m <= 0) { m = 12; y -= 1; }
+      }
+      return keys;
+    }
+
     function renderMonthlyReport() {
       var container = document.getElementById('monthlyView');
-      if (!monthly || monthly.length === 0) {
+      var hasFollowerData = monthly && monthly.length > 0;
+      var hasContentData = mediaArchive && mediaArchive.length > 0;
+      if (!hasFollowerData && !hasContentData) {
         container.innerHTML = '<div class="card"><p style="color:#9ca3af;font-size:13px">아직 월간 데이터가 부족합니다. 매일 수집이 며칠 쌓이면 표시됩니다.</p></div>';
         return;
       }
 
-      var monthsSorted = monthly.slice().sort(function (a, b) { return a.month < b.month ? 1 : -1; });
+      // 팔로워 수 히스토리가 있는 달만 보여주면 콘텐츠 백필 데이터(과거 게시물)가 있어도
+      // 화면에 안 나오므로, "최근 N개월"을 항상 기준으로 삼아 팔로워 데이터가 없는 달은
+      // 콘텐츠 통계만 채워서 보여준다.
+      var monthlyByKey = {};
+      (monthly || []).forEach(function (mo) { monthlyByKey[mo.month] = mo; });
+
+      var monthsSorted = getRecentMonthKeys(MONTHS_TO_SHOW).map(function (mk) {
+        return monthlyByKey[mk] || {
+          month: mk, startFollowers: null, endFollowers: null,
+          days: 0, gain: null, avgDailyGain: null
+        };
+      });
       var html = '';
 
       monthsSorted.forEach(function (mo) {
@@ -537,9 +565,13 @@ function Get-DashboardHtmlTemplate {
           ? ('<div class="notes-box">' + notesHtml + '</div>')
           : ('<div class="notes-placeholder">아직 이 달 분석글이 없어요. Claude에게 "' + fmtMonthTitle(mo.month) + ' 인스타그램 리포트 써줘"라고 요청하면, reports\\monthly-notes\\' + mo.month + '.md 파일로 만들어 드립니다. 그 파일을 저장하면 다음 수집 때부터 여기에 표시됩니다.</div>');
 
+        var subLine = mo.days > 0
+          ? (fmtNum(mo.startFollowers) + ' → ' + fmtNum(mo.endFollowers) + ' · ' + mo.days + '일')
+          : '팔로워 데이터 없음 (이 달 이전에 수집을 시작하지 않음)';
+
         html += '<div class="card month-card">' +
           '<div class="month-title">' + fmtMonthTitle(mo.month) + ' <span class="gain">' + gainText + '명</span></div>' +
-          '<div class="month-sub">' + fmtNum(mo.startFollowers) + ' → ' + fmtNum(mo.endFollowers) + ' · ' + mo.days + '일</div>' +
+          '<div class="month-sub">' + subLine + '</div>' +
           '<div class="month-stats">' +
             '<div><div class="month-stat-label">일평균 순증</div><div class="month-stat-value">' + avgGainCellText + '</div></div>' +
             '<div><div class="month-stat-label">발행 콘텐츠</div><div class="month-stat-value">' + monthMedia.length + '개</div></div>' +
