@@ -10,7 +10,8 @@
   - 결과를 JSON + Markdown 파일로 저장
   - 콘솔에는 계정명 / 연결 성공 여부 / 만료일만 출력 (토큰·시크릿 값은 절대 출력하지 않음)
 
-  다른 PC/사용자에서도 그대로 동작하도록 $env:USERPROFILE, $env:LOCALAPPDATA만 사용합니다.
+  다른 PC/사용자에서도 그대로 동작하도록 $env:LOCALAPPDATA만 사용합니다.
+  설정/리포트 모두 OneDrive 등 클라우드 동기화 대상이 아닌 로컬 전용 폴더에 저장됩니다.
   최초 1회는 setup-instagram-insights.ps1 을 먼저 실행해야 합니다.
 #>
 
@@ -186,7 +187,8 @@ $appSecret = $null
 # ---------------------------------------------------------------------------
 # 결과 저장 (JSON + Markdown)
 # ---------------------------------------------------------------------------
-$reportsDir = if ($config.reportsDir) { $config.reportsDir } else { Join-Path $env:USERPROFILE "Documents\InstagramCodexConnector\reports" }
+$reportsDir = $config.reportsDir
+if (-not $reportsDir) { $reportsDir = Join-Path $ConfigDir "reports" }
 New-Item -ItemType Directory -Force -Path $reportsDir | Out-Null
 
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"

@@ -64,8 +64,12 @@ cd <이 폴더 경로>
    · 공유(shares)** 값을 수집합니다. (게시물 유형에 따라 일부 지표가 지원되지 않으면
    `N/A`로 표시됩니다.)
 5. 결과를 아래 위치에 JSON + Markdown으로 저장합니다.
-   - `%USERPROFILE%\Documents\InstagramCodexConnector\reports\insights-<timestamp>.json`
-   - `%USERPROFILE%\Documents\InstagramCodexConnector\reports\insights-<timestamp>.md`
+   - `%LOCALAPPDATA%\InstagramCodexConnector\reports\insights-<timestamp>.json`
+   - `%LOCALAPPDATA%\InstagramCodexConnector\reports\insights-<timestamp>.md`
+
+   `%LOCALAPPDATA%`는 OneDrive 폴더 백업(Known Folder Move) 대상이 아닌, 이 PC에만
+   남는 로컬 전용 폴더입니다. Documents/Desktop/Pictures처럼 자동으로 클라우드에
+   동기화되지 않습니다.
 6. 콘솔에는 **계정명 / 연결 성공 여부 / 토큰 만료일 / 리포트 파일 경로**만 출력됩니다.
 
 ## 보안 설계
@@ -78,8 +82,10 @@ cd <이 폴더 경로>
   ACL을 제한합니다(best-effort).
 - 모든 콘솔 출력·경고·오류 메시지는 토큰/시크릿 원문을 포함하지 않도록 작성되어 있습니다.
 - 고정된 사용자명이나 `C:\Users\<이름>` 형태의 절대경로를 사용하지 않고, 항상
-  `$env:USERPROFILE`, `$env:LOCALAPPDATA`만 사용하므로 다른 Windows PC/계정에서도 그대로
-  동작합니다.
+  `$env:LOCALAPPDATA`만 사용하므로 다른 Windows PC/계정에서도 그대로 동작합니다.
+- 설정 파일(`config.json`)과 인사이트 리포트(JSON/Markdown) 모두 `%LOCALAPPDATA%` 하위에
+  저장됩니다. Documents가 OneDrive로 자동 백업되도록 설정된 PC라도, 토큰이 포함되지 않은
+  리포트조차 클라우드로 올라가지 않고 **이 컴퓨터에만** 남습니다.
 
 ## 참고: 사용한 API 엔드포인트
 

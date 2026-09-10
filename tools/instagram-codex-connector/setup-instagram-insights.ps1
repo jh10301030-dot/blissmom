@@ -11,7 +11,8 @@
     %LOCALAPPDATA%\InstagramCodexConnector\config.json 에만 저장
   - 콘솔에는 계정명 / 연결 성공 여부 / 토큰 만료일만 출력 (토큰·시크릿 값은 절대 출력하지 않음)
 
-  다른 PC/사용자에서도 그대로 동작하도록 $env:USERPROFILE, $env:LOCALAPPDATA만 사용합니다.
+  다른 PC/사용자에서도 그대로 동작하도록 $env:LOCALAPPDATA만 사용합니다.
+  설정/리포트 모두 OneDrive 등 클라우드 동기화 대상이 아닌 로컬 전용 폴더에 저장됩니다.
 #>
 
 [CmdletBinding()]
@@ -36,7 +37,9 @@ if (-not $IsWindows -and $PSVersionTable.PSVersion.Major -ge 6) {
 # ---------------------------------------------------------------------------
 $ConfigDir  = Join-Path $env:LOCALAPPDATA "InstagramCodexConnector"
 $ConfigPath = Join-Path $ConfigDir "config.json"
-$ReportsDir = Join-Path $env:USERPROFILE "Documents\InstagramCodexConnector\reports"
+# %LOCALAPPDATA%는 OneDrive 등 클라우드 동기화 대상이 아닌, 이 PC에만 남는 로컬 전용 폴더입니다.
+# (Documents/Desktop/Pictures는 OneDrive 폴더 백업으로 자동 동기화되는 경우가 많아 피합니다.)
+$ReportsDir = Join-Path $ConfigDir "reports"
 
 New-Item -ItemType Directory -Force -Path $ConfigDir  | Out-Null
 New-Item -ItemType Directory -Force -Path $ReportsDir | Out-Null
