@@ -881,7 +881,13 @@ try {
         totalShares    = $totalShares
         mediaCount     = $profile.media_count
     }
-    $history = @($history | Sort-Object { [DateTime]$_.date })
+    try {
+        $history = @($history | Sort-Object { [DateTime]$_.date })
+    } catch {
+        # 어떤 이유로든 date 값이 이상한 기록이 섞여 있으면 그 기록만 제외하고 계속 진행
+        $history = @($history | Where-Object { $_.date -is [string] -and $_.date -match '^\d{4}-\d{2}-\d{2}$' })
+        $history = @($history | Sort-Object { [DateTime]$_.date })
+    }
     Set-Content -Path $historyPath -Value (ConvertTo-JsonArraySafe -InputObject $history -Depth 5) -Encoding UTF8
 
     # -----------------------------------------------------------------------
