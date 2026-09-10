@@ -1,0 +1,1172 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>블리스맘 오피스</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#FBF6EC;
+    --panel-bg:#FFFFFF;
+    --panel-border:rgba(74,55,40,0.14);
+    --ink:#2E2013;
+    --ink-soft:#7A6650;
+    --floor:#F2EAD8;
+    --floor-line:rgba(74,55,40,0.10);
+    --wall:#4A3728;
+    --wall-edge:#2E2013;
+    --door:#F6D8A8;
+    --door-edge:#C99A54;
+    --exit:#FFD166;
+    --exit-edge:#C99013;
+    --furniture:#6B4A34;
+    --furniture-top:#8A6448;
+    --dept:#FDEEDC;      --dept-ink:#B5622C;
+    --ceo:#E7DFF6;       --ceo-ink:#6C4FA0;
+    --meeting:#DCEFE3;   --meeting-ink:#2F8F63;
+    --lounge:#FBE3E0;    --lounge-ink:#C05A56;
+    --entrance:#FFE9A8;  --entrance-ink:#A8791B;
+    --accent:#E8664A;
+    --accent-strong:#D14E33;
+    --avatar-edge:#8F2E1B;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#181209;
+      --panel-bg:#221A10;
+      --panel-border:rgba(255,233,201,0.12);
+      --ink:#F2EAD8;
+      --ink-soft:#B9A88C;
+      --floor:#2A2015;
+      --floor-line:rgba(255,233,201,0.06);
+      --wall:#15100A;
+      --wall-edge:#000000;
+      --door:#B98A46;
+      --door-edge:#F0C97E;
+      --exit:#FFC24B;
+      --exit-edge:#FFE29B;
+      --furniture:#3A2A1C;
+      --furniture-top:#54402A;
+      --dept:#3A2C1B;      --dept-ink:#F0A96B;
+      --ceo:#2E2740;       --ceo-ink:#C6AEEF;
+      --meeting:#1C332A;   --meeting-ink:#8FDCB6;
+      --lounge:#3A2325;    --lounge-ink:#F0A5A0;
+      --entrance:#3A2E14;  --entrance-ink:#FFCF6B;
+      --accent:#FF7A5C;
+      --accent-strong:#FF9478;
+      --avatar-edge:#FFD8CC;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#181209;
+    --panel-bg:#221A10;
+    --panel-border:rgba(255,233,201,0.12);
+    --ink:#F2EAD8;
+    --ink-soft:#B9A88C;
+    --floor:#2A2015;
+    --floor-line:rgba(255,233,201,0.06);
+    --wall:#15100A;
+    --wall-edge:#000000;
+    --door:#B98A46;
+    --door-edge:#F0C97E;
+    --exit:#FFC24B;
+    --exit-edge:#FFE29B;
+    --furniture:#3A2A1C;
+    --furniture-top:#54402A;
+    --dept:#3A2C1B;      --dept-ink:#F0A96B;
+    --ceo:#2E2740;       --ceo-ink:#C6AEEF;
+    --meeting:#1C332A;   --meeting-ink:#8FDCB6;
+    --lounge:#3A2325;    --lounge-ink:#F0A5A0;
+    --entrance:#3A2E14;  --entrance-ink:#FFCF6B;
+    --accent:#FF7A5C;
+    --accent-strong:#FF9478;
+    --avatar-edge:#FFD8CC;
+  }
+
+  *{ box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--ink); }
+  .page{
+    font-family:'Work Sans', system-ui, sans-serif;
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 40px;
+  }
+  header{ margin-bottom:20px; }
+  .eyebrow{
+    margin:0 0 6px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent-strong);
+  }
+  h1{
+    margin:0 0 8px;
+    font-family:'Fredoka', 'Work Sans', system-ui, sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,38px);
+    text-wrap:balance;
+  }
+  .sub{
+    margin:0;
+    max-width:62ch;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--ink-soft);
+  }
+
+  .layout{
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    align-items:flex-start;
+    margin-top:22px;
+  }
+
+  .stage{
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:14px;
+    flex:1 1 620px;
+    min-width:0;
+  }
+  .stage canvas{
+    display:block;
+    width:100%;
+    height:auto;
+    max-width:795px;
+    margin:0 auto;
+    border-radius:6px;
+    outline:none;
+  }
+  .stage canvas:focus-visible{
+    box-shadow:0 0 0 3px var(--accent);
+  }
+  .hint{
+    margin:10px 2px 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .hint kbd{
+    font-family:inherit;
+    font-size:11.5px;
+    padding:1px 6px;
+    border-radius:5px;
+    background:var(--floor);
+    border:1px solid var(--panel-border);
+  }
+
+  .legend{
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:18px;
+    flex:1 1 260px;
+    max-width:320px;
+  }
+  .legend h2{
+    margin:0 0 4px;
+    font-family:'Fredoka','Work Sans',sans-serif;
+    font-size:16px;
+    font-weight:600;
+  }
+  .legend .group-label{
+    margin:16px 0 8px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .legend .group-label:first-of-type{ margin-top:12px; }
+  ul.roomlist{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .roomlist button{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:7px 8px;
+    border-radius:8px;
+    border:1px solid transparent;
+    background:transparent;
+    font-family:inherit;
+    font-size:13.5px;
+    color:var(--ink);
+    text-align:left;
+    cursor:pointer;
+  }
+  .roomlist button:hover{ background:var(--floor); }
+  .roomlist button:focus-visible{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px var(--accent);
+  }
+  .dot{
+    width:9px; height:9px; border-radius:3px; flex:0 0 auto;
+  }
+  .roomlist .meta{
+    margin-left:auto;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .note{
+    margin:18px 0 0;
+    padding-top:12px;
+    border-top:1px solid var(--panel-border);
+    font-size:11.5px;
+    line-height:1.5;
+    color:var(--ink-soft);
+  }
+
+  /* ---- scenario panel ---- */
+  .scenario{
+    background:var(--panel-bg);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+    padding:16px 18px;
+    margin-top:18px;
+  }
+  .scenario-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .scenario-head h2{
+    margin:2px 0 0;
+    font-family:'Fredoka','Work Sans',sans-serif;
+    font-size:17px;
+    font-weight:600;
+  }
+  .play-btn{
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:600;
+    color:#fff;
+    background:var(--accent);
+    border:none;
+    border-radius:999px;
+    padding:9px 18px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .play-btn:hover{ background:var(--accent-strong); }
+  .play-btn:focus-visible{ outline:2px solid var(--accent-strong); outline-offset:2px; }
+  .play-btn.ghost{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1px solid var(--panel-border);
+  }
+  .scenario-body{ margin-top:14px; }
+  .step-track{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center;
+  }
+  .step-pill{
+    display:flex; align-items:center; justify-content:center;
+    min-width:22px; height:22px; padding:0 6px;
+    border-radius:999px;
+    font-size:11px; font-weight:600;
+    font-variant-numeric:tabular-nums;
+    background:var(--floor);
+    color:var(--ink-soft);
+    border:1px solid var(--panel-border);
+  }
+  .step-pill.star{ background:var(--entrance); color:var(--entrance-ink); }
+  .step-pill.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .step-pill.done{ background:var(--meeting); color:var(--meeting-ink); border-color:transparent; }
+  .narration{
+    margin:14px 0 0;
+    padding:12px 14px;
+    background:var(--floor);
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.55;
+    min-height:1.55em;
+  }
+
+  /* ---- approval modal ---- */
+  .modal-backdrop[hidden]{ display:none; }
+  .modal-backdrop{
+    position:fixed; inset:0;
+    background:rgba(20,14,8,0.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal{
+    background:var(--panel-bg);
+    border-radius:18px;
+    padding:24px;
+    max-width:440px;
+    width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+  }
+  .modal h3{
+    margin:4px 0 14px;
+    font-family:'Fredoka','Work Sans',sans-serif;
+    font-size:19px;
+    text-wrap:balance;
+  }
+  .candidates{ display:flex; flex-direction:column; gap:8px; }
+  .candidate{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:var(--floor);
+  }
+  .candidate .rank{
+    font-family:'Fredoka',sans-serif; font-weight:600;
+    color:var(--accent-strong); font-size:14px; width:16px;
+  }
+  .candidate .cname{ font-weight:600; font-size:13.5px; flex:1; }
+  .candidate .cscore{
+    font-variant-numeric:tabular-nums;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .modal-actions{ display:flex; gap:8px; margin-top:18px; flex-wrap:wrap; }
+  .modal-actions button{
+    flex:1 1 auto;
+    font-family:inherit;
+    font-size:13.5px; font-weight:600;
+    padding:10px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    border:1px solid var(--panel-border);
+    background:var(--floor);
+    color:var(--ink);
+  }
+  .modal-actions button.primary{
+    background:var(--accent); color:#fff; border-color:var(--accent);
+  }
+  .modal-actions button.primary:hover{ background:var(--accent-strong); }
+  .modal-note{
+    margin:12px 0 0; font-size:12.5px; color:var(--ink-soft); min-height:1.4em;
+  }
+</style>
+
+<div class="page">
+  <header>
+    <p class="eyebrow">Office Floorplan</p>
+    <h1>블리스맘 오피스</h1>
+    <p class="sub">부서 12개 + 대표실·회의실·라운지·출입구, 총 16개 방. 직원 12명이 A* 경로 탐색으로 자리·회의실·라운지·비서실을 오가며 걷기·타이핑·대화·앉기·대기 상태를 바꿔요.</p>
+  </header>
+
+  <section class="scenario">
+    <div class="scenario-head">
+      <div>
+        <p class="eyebrow">Daily Scenario · 사규 12단계</p>
+        <h2 id="scenarioTitle">하루 시나리오</h2>
+      </div>
+      <button class="play-btn" id="scenarioBtn">▶ 시나리오 시작</button>
+    </div>
+    <div class="scenario-body" id="scenarioBody" hidden>
+      <div class="step-track" id="stepTrack"></div>
+      <p class="narration" id="narrationText">준비 중...</p>
+    </div>
+  </section>
+
+  <div class="layout">
+    <div class="stage">
+      <canvas id="map" tabindex="0" role="img" aria-label="블리스맘 오피스 평면도, 방향키로 이동 가능"></canvas>
+      <p class="hint"><kbd>↑↓←→</kbd> 또는 <kbd>WASD</kbd>로 대표 캐릭터(코랄색) 이동 · 밝은 문 타일로만 드나들 수 있어요</p>
+    </div>
+
+    <aside class="legend">
+      <h2>방 목록</h2>
+      <p class="group-label">부서 (12) · 직원 현황</p>
+      <ul class="roomlist" id="deptList"></ul>
+      <p class="group-label">특별 공간</p>
+      <ul class="roomlist" id="specialList"></ul>
+      <p class="note">* 점 색은 해당 부서 담당 직원의 색이고, 오른쪽 글자는 실시간 상태예요. 목록을 클릭하면 대표 캐릭터가 그 방으로 이동해요. 책상 수는 사규에 인원이 정해져 있지 않아 업무량 기준으로 임의 배정한 예시입니다.</p>
+    </aside>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="approvalModal" hidden>
+  <div class="modal">
+    <p class="eyebrow">★ 대표 승인 대기 · 시나리오 일시정지</p>
+    <h3>기획 1팀 TOP 3, 무엇을 승인할까요?</h3>
+    <div class="candidates" id="candidateList"></div>
+    <div class="modal-actions">
+      <button class="primary" data-choice="approve">✅ 승인</button>
+      <button data-choice="hold">⏸ 보류</button>
+      <button data-choice="drop">🗑 폐기</button>
+    </div>
+    <p class="modal-note" id="modalNote">버튼을 누르기 전까지는 다음 단계로 넘어가지 않아요.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- layout constants ----------
+  var ROOM_W = 9, ROOM_H = 7, CORR = 3, COLS = 4, ROWS = 4, TILE = 15;
+  var innerW = CORR + COLS*ROOM_W + (COLS-1)*CORR + CORR;
+  var innerH = CORR + ROWS*ROOM_H + (ROWS-1)*CORR + CORR;
+  var MAP_W = innerW + 2, MAP_H = innerH + 2;
+
+  var T = { WALL:'wall', FLOOR:'floor', ROOM:'room', DOOR:'door', EXIT:'exit',
+            DESK:'desk', CHAIR:'chair', TABLE:'table', SOFA:'sofa',
+            RECEPTION:'reception', SHELF:'shelf', BENCH:'bench' };
+  var BLOCKING = {};
+  [T.WALL,T.DESK,T.CHAIR,T.TABLE,T.SOFA,T.RECEPTION,T.SHELF,T.BENCH].forEach(function(t){BLOCKING[t]=true;});
+
+  var CAT = {
+    dept:     { floor:'--dept',     ink:'--dept-ink',     label:'부서' },
+    ceo:      { floor:'--ceo',      ink:'--ceo-ink',      label:'대표실' },
+    meeting:  { floor:'--meeting',  ink:'--meeting-ink',  label:'회의실' },
+    lounge:   { floor:'--lounge',   ink:'--lounge-ink',   label:'라운지' },
+    entrance: { floor:'--entrance', ink:'--entrance-ink', label:'출입구' }
+  };
+
+  var ROOMS = [
+    {name:'시장조사팀',   category:'dept', desks:2, meta:'책상 2'},
+    {name:'브랜드 분석팀', category:'dept', desks:1, meta:'책상 1'},
+    {name:'기획 1팀',     category:'dept', desks:2, meta:'책상 2'},
+    {name:'브랜드 검수팀', category:'dept', desks:1, meta:'책상 1'},
+    {name:'기획 2팀',     category:'dept', desks:1, meta:'책상 1'},
+    {name:'영상 제작팀',   category:'dept', desks:2, meta:'책상 2'},
+    {name:'이미지 제작팀', category:'dept', desks:2, meta:'책상 2'},
+    {name:'협업 소통팀',   category:'dept', desks:1, meta:'책상 1'},
+    {name:'정산팀',       category:'dept', desks:1, meta:'책상 1'},
+    {name:'성과리뷰팀',   category:'dept', desks:1, meta:'책상 1'},
+    {name:'자동화 운영팀', category:'dept', desks:1, meta:'책상 1'},
+    {name:'비서실',       category:'dept', desks:1, meta:'책상 1'},
+    {name:'대표실',       category:'ceo',      desks:1, meta:'대표 책상'},
+    {name:'회의실',       category:'meeting',  desks:0, meta:'테이블 · 의자 6'},
+    {name:'라운지',       category:'lounge',   desks:0, meta:'소파 2'},
+    {name:'출입구',       category:'entrance', desks:0, meta:'안내 데스크'}
+  ];
+
+  // ---------- grid generation ----------
+  var grid = [];
+  for (var y=0;y<MAP_H;y++){
+    var row=[];
+    for (var x=0;x<MAP_W;x++) row.push({t:T.FLOOR, room:null});
+    grid.push(row);
+  }
+  for (var x0=0;x0<MAP_W;x0++){ grid[0][x0]={t:T.WALL,room:null}; grid[MAP_H-1][x0]={t:T.WALL,room:null}; }
+  for (var y0=0;y0<MAP_H;y0++){ grid[y0][0]={t:T.WALL,room:null}; grid[y0][MAP_W-1]={t:T.WALL,room:null}; }
+
+  function place(room, dx, dy, type){
+    var gx = room.ix + dx, gy = room.iy + dy;
+    grid[gy][gx] = {t:type, room:room.index};
+  }
+
+  function furnish(room){
+    switch(room.category){
+      case 'dept':
+        if (room.desks===1){ place(room,3,0,T.DESK); place(room,3,1,T.CHAIR); }
+        else { place(room,1,0,T.DESK); place(room,1,1,T.CHAIR); place(room,5,0,T.DESK); place(room,5,1,T.CHAIR); }
+        break;
+      case 'ceo':
+        place(room,3,0,T.DESK); place(room,3,1,T.CHAIR);
+        place(room,1,3,T.CHAIR); place(room,5,3,T.CHAIR);
+        place(room,0,0,T.SHELF); place(room,6,0,T.SHELF);
+        break;
+      case 'meeting':
+        for (var dx=2; dx<=4; dx++){ place(room,dx,2,T.TABLE); place(room,dx,1,T.CHAIR); place(room,dx,3,T.CHAIR); }
+        break;
+      case 'lounge':
+        place(room,0,0,T.SOFA); place(room,1,0,T.SOFA); place(room,5,0,T.SOFA); place(room,6,0,T.SOFA);
+        place(room,3,2,T.TABLE); place(room,4,2,T.TABLE);
+        break;
+      case 'entrance':
+        place(room,3,0,T.RECEPTION); place(room,4,0,T.RECEPTION);
+        place(room,0,2,T.BENCH); place(room,0,3,T.BENCH);
+        break;
+    }
+  }
+
+  ROOMS.forEach(function(room, i){
+    room.index = i;
+    var col = i % COLS, r = Math.floor(i / COLS);
+    room.x0 = 1 + CORR + col*(ROOM_W+CORR);
+    room.y0 = 1 + CORR + r*(ROOM_H+CORR);
+    room.ix = room.x0 + 1; room.iy = room.y0 + 1;
+
+    for (var dy=0; dy<ROOM_H; dy++){
+      for (var dx=0; dx<ROOM_W; dx++){
+        var gx = room.x0+dx, gy = room.y0+dy;
+        var edge = (dx===0||dx===ROOM_W-1||dy===0||dy===ROOM_H-1);
+        grid[gy][gx] = edge ? {t:T.WALL, room:i} : {t:T.ROOM, room:i};
+      }
+    }
+    room.doorX = room.x0 + Math.floor(ROOM_W/2);
+    room.doorY = room.y0 + ROOM_H - 1;
+    grid[room.doorY][room.doorX] = {t:T.DOOR, room:i};
+    room.insideX = room.doorX; room.insideY = room.doorY - 1;
+
+    furnish(room);
+
+    if (room.category==='dept' || room.category==='ceo'){
+      var fx = room.desks===1 ? 3 : 1;
+      room.homeSpot = { x: room.ix+fx, y: room.iy+2 };
+    }
+  });
+
+  var entranceRoom = ROOMS.filter(function(r){return r.category==='entrance';})[0];
+  grid[MAP_H-1][entranceRoom.doorX] = {t:T.EXIT, room:entranceRoom.index};
+
+  var meetingRoom = ROOMS.filter(function(r){return r.category==='meeting';})[0];
+  var loungeRoom = ROOMS.filter(function(r){return r.category==='lounge';})[0];
+  var secretaryRoom = ROOMS.filter(function(r){return r.name==='비서실';})[0];
+  var deptRooms = ROOMS.filter(function(r){return r.category==='dept';});
+
+  var meetingSpotsNorth = [2,3,4].map(function(dx){ return {x:meetingRoom.ix+dx, y:meetingRoom.iy+0}; });
+  var meetingSpotsSouth = [2,3,4].map(function(dx){ return {x:meetingRoom.ix+dx, y:meetingRoom.iy+4}; });
+  var meetingSpots = meetingSpotsNorth.concat(meetingSpotsSouth);
+  var loungeSpots = [1,5].map(function(dx){ return {x:loungeRoom.ix+dx, y:loungeRoom.iy+1}; });
+
+  // ---------- A* pathfinding ----------
+  var occupancy = {}; // "x,y" -> employee id, current tile only
+
+  function staticBlocked(x,y){
+    if (x<0||y<0||x>=MAP_W||y>=MAP_H) return true;
+    return !!BLOCKING[grid[y][x].t];
+  }
+
+  function astar(sx, sy, tx, ty, occupantId){
+    var startKey = sx+','+sy, goalKey = tx+','+ty;
+    if (startKey===goalKey) return [];
+    if (staticBlocked(tx,ty)) return null;
+    var goalTaken = occupancy[goalKey] && occupancy[goalKey]!==occupantId;
+    if (goalTaken) return null;
+
+    function blocked(x,y,key){
+      if (staticBlocked(x,y)) return true;
+      var occ = occupancy[key];
+      return occ!==undefined && occ!==occupantId;
+    }
+
+    var open = [{x:sx,y:sy,f:Math.abs(sx-tx)+Math.abs(sy-ty)}];
+    var gScore = {}; gScore[startKey]=0;
+    var cameFrom = {};
+    var closed = {};
+    var DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+    var guard = 0;
+
+    while (open.length && guard++ < 5000){
+      var bi = 0;
+      for (var i=1;i<open.length;i++){ if (open[i].f<open[bi].f) bi=i; }
+      var cur = open.splice(bi,1)[0];
+      var ck = cur.x+','+cur.y;
+      if (closed[ck]) continue;
+      closed[ck] = true;
+      if (ck===goalKey){
+        var path = []; var k = ck;
+        while (k!==startKey){
+          var parts = k.split(',');
+          path.push({x:+parts[0], y:+parts[1]});
+          k = cameFrom[k];
+        }
+        path.reverse();
+        return path;
+      }
+      for (var d=0; d<4; d++){
+        var nx = cur.x+DIRS[d][0], ny = cur.y+DIRS[d][1];
+        if (nx<0||ny<0||nx>=MAP_W||ny>=MAP_H) continue;
+        var nk = nx+','+ny;
+        if (closed[nk]) continue;
+        if (blocked(nx,ny,nk) && nk!==goalKey) continue;
+        var tentative = gScore[ck]+1;
+        if (gScore[nk]===undefined || tentative<gScore[nk]){
+          gScore[nk] = tentative;
+          cameFrom[nk] = ck;
+          open.push({x:nx, y:ny, f: tentative + Math.abs(nx-tx)+Math.abs(ny-ty)});
+        }
+      }
+    }
+    return null;
+  }
+
+  // ---------- employees ----------
+  var EMPLOYEE_COLORS = ['#D64550','#E08E24','#D9B23C','#7CB342','#2E9E83',
+                          '#2F8FB4','#3E5FC1','#7C5CC4','#B25CC4','#C4587C',
+                          '#8D6E4E','#5B6470'];
+  var EMPLOYEE_EMOJI = ['🧑‍🎨','🧑‍💻','🧑‍🏫','🧑‍🍳','🧑‍🚀','🧑‍⚕️',
+                         '🧑‍🔬','🧑‍🎤','🧑‍✈️','🧑‍🌾','🧑‍🚒','🧑‍🔧'];
+  var STATE_LABEL = { walk:'걷는 중', typing:'타이핑 중', talking:'대화 중', sitting:'앉아있음', idle:'대기 중' };
+  var STATE_FOR_KIND = { home:'typing', meeting:'talking', lounge:'sitting', secretary:'talking', colleague:'talking' };
+
+  var scenarioMode = false;
+
+  var EMPLOYEES = deptRooms.map(function(room, idx){
+    var emp = {
+      id: 'e'+idx, room: room, color: EMPLOYEE_COLORS[idx % EMPLOYEE_COLORS.length],
+      emoji: EMPLOYEE_EMOJI[idx % EMPLOYEE_EMOJI.length],
+      gx: room.homeSpot.x, gy: room.homeSpot.y,
+      path: [], destKind: null, stuck: 0, scripted: false,
+      state: 'typing', stateTimer: 1500 + idx*260 + Math.random()*1500,
+      animT: 1, animStart: 0
+    };
+    emp.px = emp.gx*TILE + TILE/2; emp.py = emp.gy*TILE + TILE/2;
+    emp.fromX = emp.px; emp.fromY = emp.py; emp.targetX = emp.px; emp.targetY = emp.py;
+    occupancy[emp.gx+','+emp.gy] = emp.id;
+    return emp;
+  });
+
+  function pickDestination(emp){
+    var candidates = [{kind:'home', weight:3, x:emp.room.homeSpot.x, y:emp.room.homeSpot.y}];
+    meetingSpots.forEach(function(s){ candidates.push({kind:'meeting', weight:0.4, x:s.x, y:s.y}); });
+    loungeSpots.forEach(function(s){ candidates.push({kind:'lounge', weight:0.6, x:s.x, y:s.y}); });
+    if (emp.room.name!=='비서실'){
+      candidates.push({kind:'secretary', weight:1, x:secretaryRoom.homeSpot.x, y:secretaryRoom.homeSpot.y});
+    }
+    deptRooms.forEach(function(r){
+      if (r===emp.room) return;
+      candidates.push({kind:'colleague', weight:0.3, x:r.homeSpot.x, y:r.homeSpot.y});
+    });
+
+    for (var attempt=0; attempt<8; attempt++){
+      var total = candidates.reduce(function(s,c){return s+c.weight;}, 0);
+      var r = Math.random()*total;
+      var chosen = candidates[candidates.length-1];
+      for (var i=0;i<candidates.length;i++){
+        r -= candidates[i].weight;
+        if (r<=0){ chosen = candidates[i]; break; }
+      }
+      var key = chosen.x+','+chosen.y;
+      if (occupancy[key] && occupancy[key]!==emp.id) continue;
+      return chosen;
+    }
+    return {kind:'home', x:emp.room.homeSpot.x, y:emp.room.homeSpot.y};
+  }
+
+  function arrive(emp, kind){
+    emp.state = STATE_FOR_KIND[kind] || 'idle';
+    emp.stateTimer = 3000 + Math.random()*4000;
+    emp.destKind = null;
+    emp.path = [];
+  }
+
+  function sendTo(emp, x, y, kind, holdMs){
+    var path = astar(emp.gx, emp.gy, x, y, emp.id);
+    if (path===null){ emp.state='idle'; emp.stateTimer = 900; return false; }
+    if (path.length===0){
+      emp.state = STATE_FOR_KIND[kind] || 'idle';
+      emp.stateTimer = holdMs!==undefined ? holdMs : (3000+Math.random()*4000);
+      emp.destKind = null; emp.path = [];
+      return true;
+    }
+    emp.path = path; emp.destKind = kind; emp.destX = x; emp.destY = y;
+    emp.state = 'walk'; emp.stuck = 0;
+    emp._holdMs = holdMs;
+    return true;
+  }
+
+  function decideNext(emp){
+    if (Math.random() < 0.12){
+      emp.state = 'idle';
+      emp.stateTimer = 700 + Math.random()*1200;
+      return;
+    }
+    var dest = pickDestination(emp);
+    sendTo(emp, dest.x, dest.y, dest.kind);
+  }
+
+  var EMP_ANIM_MS = 150;
+
+  function updateEmployee(emp, ts, dt){
+    if (scenarioMode && !emp.scripted) return;
+    if (emp.state==='walk'){
+      if (emp.animT < 1) return;
+      if (emp.path.length===0){ arrive(emp, emp.destKind); return; }
+      var next = emp.path[0];
+      var nk = next.x+','+next.y;
+      var occ = occupancy[nk];
+      if (occ!==undefined && occ!==emp.id){
+        emp.stuck++;
+        if (emp.stuck > 8){
+          emp.stuck = 0;
+          var replanned = astar(emp.gx, emp.gy, emp.destX, emp.destY, emp.id);
+          if (replanned){ emp.path = replanned; }
+          else { emp.state='idle'; emp.stateTimer = 800; }
+        }
+        return;
+      }
+      delete occupancy[emp.gx+','+emp.gy];
+      emp.fromX = emp.px; emp.fromY = emp.py;
+      emp.gx = next.x; emp.gy = next.y;
+      occupancy[emp.gx+','+emp.gy] = emp.id;
+      emp.path.shift();
+      emp.targetX = emp.gx*TILE + TILE/2; emp.targetY = emp.gy*TILE + TILE/2;
+      emp.animT = 0; emp.animStart = ts; emp.stuck = 0;
+    } else {
+      emp.stateTimer -= dt;
+      if (emp.stateTimer <= 0){
+        if (scenarioMode) emp.stateTimer = 999999; // hold pose; scenario controller drives what's next
+        else decideNext(emp);
+      }
+    }
+  }
+
+  // ---------- offscreen static render ----------
+  var DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  function makeCanvas(wCss, hCss){
+    var c = document.createElement('canvas');
+    c.width = Math.round(wCss*DPR); c.height = Math.round(hCss*DPR);
+    c.style.width = wCss+'px'; c.style.height = hCss+'px';
+    var ctx = c.getContext('2d');
+    ctx.scale(DPR, DPR);
+    return {canvas:c, ctx:ctx};
+  }
+
+  var mapCss = makeCanvas(MAP_W*TILE, MAP_H*TILE);
+  var staticLayer = document.createElement('canvas');
+  staticLayer.width = mapCss.canvas.width; staticLayer.height = mapCss.canvas.height;
+  var staticCtx = staticLayer.getContext('2d');
+  staticCtx.scale(DPR, DPR);
+
+  function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function drawStatic(){
+    var ctx = staticCtx;
+    ctx.clearRect(0,0,MAP_W*TILE,MAP_H*TILE);
+
+    var cFloor = cssVar('--floor'), cWall = cssVar('--wall'), cWallEdge = cssVar('--wall-edge'),
+        cDoor = cssVar('--door'), cDoorEdge = cssVar('--door-edge'),
+        cExit = cssVar('--exit'), cExitEdge = cssVar('--exit-edge'),
+        cFurn = cssVar('--furniture'), cFurnTop = cssVar('--furniture-top'),
+        cLine = cssVar('--floor-line');
+
+    for (var y=0;y<MAP_H;y++){
+      for (var x=0;x<MAP_W;x++){
+        var cell = grid[y][x];
+        var px = x*TILE, py = y*TILE;
+        var fill;
+        if (cell.t===T.WALL) fill = cWall;
+        else if (cell.t===T.FLOOR) fill = cFloor;
+        else if (cell.t===T.ROOM) fill = cssVar(CAT[ROOMS[cell.room].category].floor);
+        else if (cell.t===T.DOOR) fill = cDoor;
+        else if (cell.t===T.EXIT) fill = cExit;
+        else fill = cFurn;
+
+        ctx.fillStyle = fill;
+        ctx.fillRect(px, py, TILE, TILE);
+
+        if (cell.t===T.WALL){
+          ctx.strokeStyle = cWallEdge; ctx.lineWidth = 1;
+          ctx.strokeRect(px+0.5, py+0.5, TILE-1, TILE-1);
+        } else if (cell.t===T.DOOR){
+          ctx.strokeStyle = cDoorEdge; ctx.lineWidth = 1.5;
+          ctx.strokeRect(px+1.5, py+1.5, TILE-3, TILE-3);
+        } else if (cell.t===T.EXIT){
+          ctx.strokeStyle = cExitEdge; ctx.lineWidth = 2;
+          ctx.strokeRect(px+1.5, py+1.5, TILE-3, TILE-3);
+        } else if (BLOCKING[cell.t]){
+          ctx.fillStyle = cFurnTop;
+          ctx.fillRect(px+2.5, py+2, TILE-5, TILE-8);
+        } else {
+          ctx.strokeStyle = cLine; ctx.lineWidth = 1;
+          ctx.strokeRect(px+0.5, py+0.5, TILE-1, TILE-1);
+        }
+      }
+    }
+
+    function roundRect(x,y,w,h,r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y, x+w,y+h, r);
+      ctx.arcTo(x+w,y+h, x,y+h, r);
+      ctx.arcTo(x,y+h, x,y, r);
+      ctx.arcTo(x,y, x+w,y, r);
+      ctx.closePath();
+    }
+
+    // door name signs (cute pill tags)
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = "600 10px 'Fredoka','Work Sans',sans-serif";
+    ROOMS.forEach(function(room){
+      var cx = room.doorX*TILE + TILE/2;
+      var cy = room.doorY*TILE + TILE + 11;
+      var w = ctx.measureText(room.name).width + 16;
+      ctx.fillStyle = cssVar(CAT[room.category].floor);
+      ctx.strokeStyle = cssVar(CAT[room.category].ink);
+      ctx.lineWidth = 1;
+      roundRect(cx-w/2, cy-8, w, 16, 8);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = cssVar(CAT[room.category].ink);
+      ctx.fillText(room.name, cx, cy+0.5);
+    });
+
+    // cute decorations (purely visual, walk right over them)
+    ctx.font = "11px 'Segoe UI Emoji','Noto Color Emoji','Apple Color Emoji',sans-serif";
+    var DECOR = {
+      dept:     {emoji:'🪴', dx:0, dy:0},
+      ceo:      {emoji:'👑', dx:0, dy:0},
+      meeting:  {emoji:'🪴', dx:0, dy:2},
+      entrance: {emoji:'🔔', dx:3, dy:0}
+    };
+    ROOMS.forEach(function(room){
+      var d = DECOR[room.category];
+      if (!d) return;
+      var cx = (room.ix+d.dx)*TILE + TILE/2, cy = (room.iy+d.dy)*TILE + TILE/2;
+      ctx.fillText(d.emoji, cx, cy+1);
+    });
+    // lounge coffee cup on the table, exit door sparkle
+    ctx.fillText('☕', (loungeRoom.ix+3)*TILE+TILE/2, (loungeRoom.iy+2)*TILE+TILE/2+1);
+    ctx.font = "13px 'Segoe UI Emoji','Noto Color Emoji','Apple Color Emoji',sans-serif";
+    ctx.fillText('✨', entranceRoom.doorX*TILE+TILE/2, (MAP_H-1)*TILE+TILE/2+1);
+  }
+
+  drawStatic();
+  if (window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawStatic);
+  }
+
+  // ---------- interactive layer ----------
+  var canvas = document.getElementById('map');
+  canvas.width = mapCss.canvas.width; canvas.height = mapCss.canvas.height;
+  canvas.style.width = (MAP_W*TILE)+'px'; canvas.style.height = (MAP_H*TILE)+'px';
+  var ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var avatar = {
+    gx: entranceRoom.doorX, gy: MAP_H-2,
+    px: 0, py: 0, fromX:0, fromY:0, animT: 1, ANIM_MS: 110
+  };
+  avatar.px = avatar.gx*TILE + TILE/2;
+  avatar.py = avatar.gy*TILE + TILE/2;
+  avatar.fromX = avatar.px; avatar.fromY = avatar.py;
+
+  function canWalk(gx,gy){
+    if (gx<0||gy<0||gx>=MAP_W||gy>=MAP_H) return false;
+    return !BLOCKING[grid[gy][gx].t];
+  }
+
+  function tryMove(dir){
+    if (avatar.animT < 1) return;
+    var dx=0, dy=0;
+    if (dir==='up') dy=-1; else if (dir==='down') dy=1;
+    else if (dir==='left') dx=-1; else if (dir==='right') dx=1;
+    var nx = avatar.gx+dx, ny = avatar.gy+dy;
+    if (!canWalk(nx,ny)) return;
+    avatar.fromX = avatar.px; avatar.fromY = avatar.py;
+    avatar.gx = nx; avatar.gy = ny;
+    avatar.targetX = nx*TILE + TILE/2; avatar.targetY = ny*TILE + TILE/2;
+    avatar.animT = reduceMotion ? 1 : 0;
+    avatar.animStart = performance.now();
+    if (reduceMotion){ avatar.px = avatar.targetX; avatar.py = avatar.targetY; }
+  }
+
+  function teleport(room){
+    avatar.gx = room.insideX; avatar.gy = room.insideY;
+    avatar.px = avatar.gx*TILE + TILE/2; avatar.py = avatar.gy*TILE + TILE/2;
+    avatar.fromX = avatar.px; avatar.fromY = avatar.py; avatar.animT = 1;
+    canvas.focus();
+  }
+
+  var order = ['up','down','left','right'];
+  var pressed = {};
+  var KEYMAP = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+                 KeyW:'up', KeyS:'down', KeyA:'left', KeyD:'right' };
+
+  window.addEventListener('keydown', function(e){
+    var dir = KEYMAP[e.code];
+    if (!dir) return;
+    e.preventDefault();
+    pressed[dir] = true;
+  });
+  window.addEventListener('keyup', function(e){
+    var dir = KEYMAP[e.code];
+    if (dir) pressed[dir] = false;
+  });
+
+  var STEP_MS = 130, lastStep = 0;
+  function stepLoop(ts){
+    if (ts - lastStep >= STEP_MS){
+      for (var i=0;i<order.length;i++){
+        if (pressed[order[i]]){ tryMove(order[i]); lastStep = ts; break; }
+      }
+    }
+    requestAnimationFrame(stepLoop);
+  }
+  requestAnimationFrame(stepLoop);
+
+  function personPos(p, animMs){
+    var t = Math.min(1, p.animT);
+    var x = p.fromX + (p.targetX!==undefined ? (p.targetX-p.fromX)*t : 0);
+    var y = p.fromY + (p.targetY!==undefined ? (p.targetY-p.fromY)*t : 0);
+    if (p.targetX===undefined){ x = p.px; y = p.py; }
+    p.px = x; p.py = y;
+    return {x:x, y:y};
+  }
+
+  var EMOJI_FONT = "16px 'Segoe UI Emoji','Noto Color Emoji','Apple Color Emoji',sans-serif";
+
+  function drawPerson(pos, color, emoji, state, ts, seed){
+    var x = pos.x, y = pos.y;
+    var bob = 0, scale = 1, wiggle = 0, sink = 0;
+    if (state==='walk'){
+      bob = Math.sin(ts/70 + seed) * 1.3;
+    } else if (state==='idle'){
+      scale = 1 + Math.sin(ts/500 + seed) * 0.03;
+    } else if (state==='sitting'){
+      scale = 0.85; sink = 2;
+    } else if (state==='talking'){
+      wiggle = Math.sin(ts/180 + seed) * 0.1;
+    }
+
+    ctx.save();
+    ctx.translate(x, y + sink - bob);
+    ctx.rotate(wiggle);
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.beginPath(); ctx.ellipse(0, 6, 5, 1.8, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.28;
+    ctx.beginPath(); ctx.arc(0, 0, 7.5, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.font = EMOJI_FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, 0, 0.5);
+
+    if (state==='typing'){
+      var blink = Math.sin(ts/100 + seed) > 0;
+      ctx.font = "8px sans-serif";
+      ctx.fillText(blink ? '⌨️' : '💻', 8, -7);
+    } else if (state==='talking'){
+      var op = 0.5 + Math.sin(ts/240 + seed) * 0.5;
+      ctx.globalAlpha = Math.max(0.25, op);
+      ctx.font = "9px sans-serif";
+      ctx.fillText('💬', 8, -7);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
+  var lastFrameTs = 0;
+
+  function render(ts){
+    var dt = lastFrameTs ? ts-lastFrameTs : 16;
+    lastFrameTs = ts;
+
+    if (avatar.targetX!==undefined && avatar.animT<1){
+      avatar.animT = Math.min(1, (ts-avatar.animStart)/avatar.ANIM_MS);
+    }
+    EMPLOYEES.forEach(function(emp){
+      if (emp.animT<1) emp.animT = Math.min(1, (ts-emp.animStart)/EMP_ANIM_MS);
+      updateEmployee(emp, ts, dt);
+    });
+
+    ctx.clearRect(0,0,MAP_W*TILE,MAP_H*TILE);
+    ctx.drawImage(staticLayer, 0, 0, MAP_W*TILE, MAP_H*TILE);
+
+    var actors = EMPLOYEES.map(function(emp){
+      return {pos:personPos(emp, EMP_ANIM_MS), color:emp.color, emoji:emp.emoji, state:emp.state, seed:+emp.id.slice(1)};
+    });
+    var playerState = avatar.animT<1 ? 'walk' : 'idle';
+    actors.push({pos:personPos(avatar, avatar.ANIM_MS), color:cssVar('--accent'), emoji:'🧑‍💼', state:playerState, seed:99});
+
+    actors.sort(function(a,b){ return a.pos.y-b.pos.y; });
+    actors.forEach(function(a){ drawPerson(a.pos, a.color, a.emoji, a.state, ts, a.seed); });
+
+    updateStatusPanel();
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  // ---------- legend ----------
+  var deptMetaEls = {};
+
+  function buildList(container, rooms){
+    rooms.forEach(function(room){
+      var li = document.createElement('li');
+      var btn = document.createElement('button');
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      var emp = room.category==='dept' ? EMPLOYEES.filter(function(e){return e.room===room;})[0] : null;
+      dot.style.background = emp ? emp.color : 'var(' + CAT[room.category].ink + ')';
+      var label = document.createElement('span');
+      label.textContent = room.name;
+      var meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = room.meta;
+      meta.title = room.meta;
+      btn.appendChild(dot); btn.appendChild(label); btn.appendChild(meta);
+      btn.addEventListener('click', function(){ teleport(room); });
+      li.appendChild(btn);
+      container.appendChild(li);
+      if (emp) deptMetaEls[emp.id] = meta;
+    });
+  }
+  buildList(document.getElementById('deptList'), deptRooms);
+  buildList(document.getElementById('specialList'), ROOMS.filter(function(r){return r.category!=='dept';}));
+
+  function updateStatusPanel(){
+    EMPLOYEES.forEach(function(emp){
+      var el = deptMetaEls[emp.id];
+      if (el) el.textContent = STATE_LABEL[emp.state] || '';
+    });
+  }
+
+  // ---------- daily scenario (사규 12단계 + ★ 대표 승인) ----------
+  function empByDept(name){
+    return EMPLOYEES.filter(function(e){ return e.room.name===name; })[0];
+  }
+
+  var CANDIDATES = [
+    {name:'뽁뽁이 팝핑 페인팅', score:92, note:'소리+질감 훅이 가장 강함'},
+    {name:'베이킹소다 피즈 아트', score:91, note:'과학 반응이라 신기함 소구 강함'},
+    {name:'요거트 핑거페인팅', score:88, note:'안전한 재료 소구로 신뢰 쌓기 좋음'}
+  ];
+
+  var SCENARIO_STEPS = [
+    {num:1,  dept:'시장조사팀',   text:'외국 사이트에서 오늘의 놀이 후보 5개를 모으는 중이에요: 볼 굴리기, 뽁뽁이 페인팅, 베이킹소다 피즈 아트, 요거트 손가락 그림, 컬러 아이스.'},
+    {num:2,  dept:'브랜드 분석팀', text:'SNS 계정이 아직 연동되어 있지 않아 최근 저장·댓글 흐름은 "미연동"으로 남겨둬요.'},
+    {num:3,  dept:'기획 1팀',     text:'아이디어 10개를 만들어 점수를 매겼어요. TOP 3: 뽁뽁이 팝핑(92점) · 베이킹소다 피즈아트(91점) · 요거트 핑거페인팅(88점).'},
+    {num:4,  dept:'브랜드 검수팀', text:'TOP 3 모두 브랜드 기준을 통과했어요 — AI 영상 아님, 근거 링크 있음, 구체적 행동으로 마무리됨.'},
+    {special:'meeting', text:'기획 1팀과 브랜드 검수팀이 회의실로 이동해 대표님께 보여드릴 자료를 마주 앉아 정리하고 있어요.'},
+    {special:'gate', text:'★ 대표님의 승인을 기다리는 중입니다... 버튼을 눌러야만 다음 단계로 넘어가요.'},
+    {num:5,  dept:'기획 2팀',     text:'승인된 "뽁뽁이 팝핑 페인팅"으로 릴스 대본을 완성했어요: 훅→문제→전환→시연→결과→CTA.'},
+    {num:6,  dept:'영상 제작팀',   text:'대본을 6컷으로 나누고 촬영 메모를 작성했어요. 20초 이내, 원본 사운드 유지.'},
+    {num:7,  dept:'이미지 제작팀', text:'예비 캐러셀 문구와 표지 3안을 준비해뒀어요.'},
+    {num:8,  dept:'협업 소통팀',   text:'오늘 들어온 제휴 제안은 없어요. 특이사항 없음.'},
+    {num:9,  dept:'정산팀',       text:'이번 달 입금 완료 2건, 대기 1건 — 확인 필요 항목은 없어요.'},
+    {num:10, dept:'성과리뷰팀',   text:'어제 콘텐츠는 아직 업로드 전이라 성과 수치가 없어요. (업로드 대기)'},
+    {num:11, dept:'자동화 운영팀', text:'연동 상태 점검 완료, 실패 0건이에요.'},
+    {num:12, dept:'비서실',       text:'전 부서 보고를 모아 대표님께 5줄로 브리핑해요: "오늘은 촬영·업로드만 하시면 됩니다."'}
+  ];
+
+  var DEPT_HOLD_MS = 3800, MEETING_HOLD_MS = 9500;
+
+  var scenario = { active:false, idx:-1 };
+
+  var scenarioBtn = document.getElementById('scenarioBtn');
+  var scenarioBody = document.getElementById('scenarioBody');
+  var stepTrackEl = document.getElementById('stepTrack');
+  var narrationEl = document.getElementById('narrationText');
+  var modalEl = document.getElementById('approvalModal');
+  var modalNoteEl = document.getElementById('modalNote');
+  var candidateListEl = document.getElementById('candidateList');
+
+  CANDIDATES.forEach(function(c, i){
+    var card = document.createElement('article');
+    card.className = 'candidate';
+    card.innerHTML = '<span class="rank">'+(i+1)+'</span>'+
+                      '<span class="cname">'+c.name+'</span>'+
+                      '<span class="cscore">'+c.score+'점 · '+c.note+'</span>';
+    candidateListEl.appendChild(card);
+  });
+
+  var pillEls = SCENARIO_STEPS.map(function(step, i){
+    var pill = document.createElement('span');
+    pill.className = 'step-pill' + (step.special ? ' star' : '');
+    pill.textContent = step.special ? '★' : step.num;
+    stepTrackEl.appendChild(pill);
+    return pill;
+  });
+
+  function paintTrack(){
+    pillEls.forEach(function(pill, i){
+      pill.classList.remove('active','done');
+      if (i < scenario.idx) pill.classList.add('done');
+      else if (i === scenario.idx) pill.classList.add('active');
+    });
+  }
+
+  function goToStep(i){
+    scenario.idx = i;
+    paintTrack();
+    var step = SCENARIO_STEPS[i];
+    narrationEl.textContent = step.text;
+
+    EMPLOYEES.forEach(function(e){ e.scripted = false; });
+
+    if (step.special==='gate'){
+      modalNoteEl.textContent = '버튼을 누르기 전까지는 다음 단계로 넘어가지 않아요.';
+      modalEl.hidden = false;
+      return; // hard stop: no timer, only the modal buttons call advance()
+    }
+
+    if (step.special==='meeting'){
+      var planner = empByDept('기획 1팀'), reviewer = empByDept('브랜드 검수팀');
+      planner.scripted = true; reviewer.scripted = true;
+      sendTo(planner, meetingSpotsNorth[1].x, meetingSpotsNorth[1].y, 'meeting', MEETING_HOLD_MS);
+      sendTo(reviewer, meetingSpotsSouth[1].x, meetingSpotsSouth[1].y, 'meeting', MEETING_HOLD_MS);
+      window.setTimeout(advance, MEETING_HOLD_MS);
+      return;
+    }
+
+    var emp = empByDept(step.dept);
+    if (emp){
+      emp.scripted = true;
+      sendTo(emp, emp.room.homeSpot.x, emp.room.homeSpot.y, 'home', DEPT_HOLD_MS);
+    }
+    window.setTimeout(advance, DEPT_HOLD_MS);
+  }
+
+  function advance(){
+    if (!scenario.active) return;
+    if (scenario.idx+1 >= SCENARIO_STEPS.length){ endScenario(); return; }
+    goToStep(scenario.idx+1);
+  }
+
+  function teleportHome(emp){
+    delete occupancy[emp.gx+','+emp.gy];
+    emp.gx = emp.room.homeSpot.x; emp.gy = emp.room.homeSpot.y;
+    occupancy[emp.gx+','+emp.gy] = emp.id;
+    emp.px = emp.gx*TILE+TILE/2; emp.py = emp.gy*TILE+TILE/2;
+    emp.fromX = emp.px; emp.fromY = emp.py; emp.targetX = emp.px; emp.targetY = emp.py;
+    emp.animT = 1; emp.path = []; emp.state = 'typing'; emp.stateTimer = 999999; emp.scripted = false;
+  }
+
+  function startScenario(){
+    modalEl.hidden = true;
+    EMPLOYEES.forEach(teleportHome);
+    scenario.active = true;
+    scenarioMode = true;
+    scenarioBody.hidden = false;
+    scenarioBtn.textContent = '⟲ 처음부터';
+    goToStep(0);
+  }
+
+  function endScenario(){
+    narrationEl.textContent = '오늘 하루 끝! "▶ 시나리오 시작"을 다시 누르면 처음부터 볼 수 있어요.';
+    paintTrack();
+    scenarioMode = false;
+    scenario.active = false;
+    scenario.idx = SCENARIO_STEPS.length;
+    EMPLOYEES.forEach(function(e){ e.scripted = false; });
+  }
+
+  scenarioBtn.addEventListener('click', function(){ startScenario(); });
+
+  modalEl.querySelectorAll('.modal-actions button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var choice = btn.getAttribute('data-choice');
+      if (choice==='approve'){
+        modalEl.hidden = true;
+        advance();
+      } else if (choice==='hold'){
+        modalNoteEl.textContent = '⏸ 보류되었습니다 — 시나리오가 여기 멈춰 있어요. 마음이 바뀌면 승인을 눌러주세요.';
+      } else {
+        modalNoteEl.textContent = '🗑 폐기되었습니다 — 시나리오가 여기 멈춰 있어요. 그래도 진행하려면 승인을 눌러주세요.';
+      }
+    });
+  });
+
+})();
+</script>
+
+</body></html>
