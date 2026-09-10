@@ -26,6 +26,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+$SCRIPT_VERSION = '2026-09-11-v1'
+Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
+
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
 $ConfigPath    = Join-Path $ConnectorRoot 'config.json'
 $ReportsDir    = Join-Path $ConnectorRoot 'reports'
