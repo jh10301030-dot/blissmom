@@ -10,8 +10,10 @@ Windows PC에서 Instagram Graph API(Instagram Login) 연결을 설정하고,
 
 | 파일 | 역할 |
 |---|---|
-| `setup-instagram-insights.ps1` | 최초 1회(또는 토큰 재발급 시) 실행. 보안 입력창으로 토큰/앱 시크릿을 받아 장기 토큰으로 교환하고, 연결 테스트 및 권한 확인 후 암호화 저장 |
-| `collect-instagram-insights.ps1` | 프로필 + 최근 콘텐츠 5개의 조회/도달/저장/공유 데이터를 수집하여 JSON/Markdown으로 저장. 만료 10일 이내면 토큰을 자동 갱신 |
+| `setup-instagram-insights.ps1` | 최초 1회(또는 토큰 재발급 시) 실행. 보안 입력창으로 토큰/앱 시크릿을 받아 연결·검증 후 암호화 저장 |
+| `collect-instagram-insights.ps1` | 팔로워 수(전날 대비 증감 포함) + 최근 콘텐츠 5개의 조회/도달/저장/공유 데이터를 "아침 브리프" 형태의 JSON/Markdown으로 저장. 만료 10일 이내면 토큰을 자동 갱신 |
+| `register-daily-brief.ps1` | `collect-instagram-insights.ps1`을 매일 오전 8시(기본값)에 자동 실행하도록 Windows 작업 스케줄러에 등록 (토큰/시크릿을 다루지 않는 별도 스크립트) |
+| `1_연결설정.bat` / `2_인사이트수집.bat` / `3_아침브리프_자동등록.bat` | 위 스크립트들을 더블클릭만으로 실행하기 위한 실행기 |
 
 ## 사용 방법
 
@@ -19,12 +21,12 @@ Windows PC에서 Instagram Graph API(Instagram Login) 연결을 설정하고,
 # 1) 최초 연결 설정 (GUI 입력창이 열립니다)
 .\setup-instagram-insights.ps1
 
-# (선택) 매일 09:00에 collect 스크립트를 자동 실행하도록 작업 스케줄러에 등록
-#        -> 만료 10일 전 자동 갱신 로직이 매일 확인됩니다.
-.\setup-instagram-insights.ps1 -RegisterDailyTask
-
-# 2) 인사이트 수집 (필요할 때마다, 또는 예약 작업으로 자동 실행)
+# 2) 인사이트 수집 (필요할 때마다 수동 실행)
 .\collect-instagram-insights.ps1
+
+# 3) (선택) 매일 오전 8시에 2번을 자동 실행하도록 등록
+#        -> 만료 10일 전 자동 갱신도 매일 같이 확인됩니다.
+.\register-daily-brief.ps1
 ```
 
 PowerShell 실행 정책 때문에 스크립트가 차단되면, 관리자 권한 없이도 아래처럼 실행할 수 있습니다.

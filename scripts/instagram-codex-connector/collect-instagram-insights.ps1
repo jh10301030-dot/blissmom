@@ -131,10 +131,17 @@ try {
     # 3. 프로필 조회
     # -----------------------------------------------------------------------
     Write-Host '프로필 정보를 가져오는 중...' -ForegroundColor DarkGray
-    $profileUri = 'https://graph.instagram.com/me' +
-        '?fields=id,username,account_type,media_count' +
-        "&access_token=$([uri]::EscapeDataString($accessToken))"
-    $profile = Invoke-IgApi -Uri $profileUri
+    try {
+        $profileUri = 'https://graph.instagram.com/me' +
+            '?fields=id,username,name,account_type,media_count,followers_count' +
+            "&access_token=$([uri]::EscapeDataString($accessToken))"
+        $profile = Invoke-IgApi -Uri $profileUri
+    } catch {
+        $profileUri = 'https://graph.instagram.com/me' +
+            '?fields=id,username,account_type,media_count' +
+            "&access_token=$([uri]::EscapeDataString($accessToken))"
+        $profile = Invoke-IgApi -Uri $profileUri
+    }
 
     # -----------------------------------------------------------------------
     # 4. 최근 콘텐츠 목록 조회
@@ -211,37 +218,77 @@ try {
     }
 
     # -----------------------------------------------------------------------
-    # 6. 결과 저장 (JSON / Markdown)
+    # 6. 전날 리포트와 비교 (팔로워 증감 계산용)
+    # -----------------------------------------------------------------------
+    $latestJsonPath = Join-Path $ReportsDir 'latest.json'
+    $latestMdPath   = Join-Path $ReportsDir 'latest.md'
+    $previousFollowers = $null
+    $previousGeneratedAtUtc = $null
+    if (Test-Path $latestJsonPath) {
+        try {
+            $previousReport = Get-Content -Path $latestJsonPath -Raw | ConvertFrom-Json
+            $previousFollowers = $previousReport.account.followersCount
+            $previousGeneratedAtUtc = $previousReport.generatedAtUtc
+        } catch { }
+    }
+
+    $followersDelta = $null
+    if ($null -ne $previousFollowers -and $null -ne $profile.followers_count) {
+        $followersDelta = [int]$profile.followers_count - [int]$previousFollowers
+    }
+
+    # -----------------------------------------------------------------------
+    # 7. 결과 저장 (JSON / Markdown) - 일일 브리프 형태
     # -----------------------------------------------------------------------
     $generatedAtUtc = (Get-Date).ToUniversalTime()
     $timestampTag = $generatedAtUtc.ToString('yyyyMMdd-HHmmss')
 
+    $totalReach = ($mediaInsights | ForEach-Object { $_.reach } | Where-Object { $_ -ne 'N/A' } | Measure-Object -Sum).Sum
+    $totalSaved = ($mediaInsights | ForEach-Object { $_.saved } | Where-Object { $_ -ne 'N/A' } | Measure-Object -Sum).Sum
+    $totalShares = ($mediaInsights | ForEach-Object { $_.shares } | Where-Object { $_ -ne 'N/A' } | Measure-Object -Sum).Sum
+
     $report = [PSCustomObject]@{
         generatedAtUtc = $generatedAtUtc.ToString('o')
         account        = [PSCustomObject]@{
-            username    = $profile.username
-            id          = $profile.id
-            accountType = $profile.account_type
-            mediaCount  = $profile.media_count
+            username        = $profile.username
+            id              = $profile.id
+            accountType     = $profile.account_type
+            mediaCount      = $profile.media_count
+            followersCount  = $profile.followers_count
+            followersDelta  = $followersDelta
         }
         tokenExpiresAtUtc = $expiresAtUtc.ToString('o')
+        summary        = [PSCustomObject]@{
+            totalReach  = $totalReach
+            totalSaved  = $totalSaved
+            totalShares = $totalShares
+        }
         media          = $mediaInsights
     }
 
     $jsonPath = Join-Path $ReportsDir "instagram-insights-$timestampTag.json"
     $mdPath   = Join-Path $ReportsDir "instagram-insights-$timestampTag.md"
-    $latestJsonPath = Join-Path $ReportsDir 'latest.json'
-    $latestMdPath   = Join-Path $ReportsDir 'latest.md'
 
     $report | ConvertTo-Json -Depth 6 | Set-Content -Path $jsonPath -Encoding UTF8
     $report | ConvertTo-Json -Depth 6 | Set-Content -Path $latestJsonPath -Encoding UTF8
 
+    $followersLine = "$($profile.followers_count)명"
+    if ($null -ne $followersDelta) {
+        if ($followersDelta -gt 0) { $followersLine += " (전날 대비 +$followersDelta)" }
+        elseif ($followersDelta -lt 0) { $followersLine += " (전날 대비 $followersDelta)" }
+        else { $followersLine += " (전날과 동일)" }
+    }
+
     $md = New-Object System.Text.StringBuilder
-    [void]$md.AppendLine("# Instagram Insights Report")
+    [void]$md.AppendLine("# 인스타그램 아침 브리프")
     [void]$md.AppendLine("")
-    [void]$md.AppendLine("- 계정: **$($profile.username)** (id: $($profile.id), $($profile.account_type))")
-    [void]$md.AppendLine("- 생성 시각(UTC): $($generatedAtUtc.ToString('yyyy-MM-dd HH:mm'))")
+    [void]$md.AppendLine("- 계정: **@$($profile.username)**")
+    [void]$md.AppendLine("- 팔로워: **$followersLine**")
+    [void]$md.AppendLine("- 생성 시각: $($generatedAtUtc.ToString('yyyy-MM-dd HH:mm')) (UTC)")
+    [void]$md.AppendLine("- 최근 $($mediaInsights.Count)개 게시물 합계 - 도달: $totalReach, 저장: $totalSaved, 공유: $totalShares")
     [void]$md.AppendLine("- 토큰 만료일(UTC): $($expiresAtUtc.ToString('yyyy-MM-dd'))")
+    [void]$md.AppendLine("")
+    [void]$md.AppendLine("## 최근 콘텐츠 성과")
     [void]$md.AppendLine("")
     [void]$md.AppendLine("| 콘텐츠 ID | 타입 | 게시일 | 조회(views) | 도달(reach) | 저장(saved) | 공유(shares) | 링크 |")
     [void]$md.AppendLine("|---|---|---|---|---|---|---|---|")
@@ -257,11 +304,12 @@ try {
     Set-Content -Path $latestMdPath -Value $md.ToString() -Encoding UTF8
 
     # -----------------------------------------------------------------------
-    # 7. 콘솔 요약 (비밀값 절대 미출력)
+    # 8. 콘솔 요약 (비밀값 절대 미출력)
     # -----------------------------------------------------------------------
     Write-Host ''
     Write-Host '=== 수집 완료 ===' -ForegroundColor Green
     Write-Host "계정명          : $($profile.username)"
+    Write-Host "팔로워          : $followersLine"
     Write-Host "연결 성공 여부  : 성공"
     Write-Host "토큰 만료일     : $($expiresAtUtc.ToString('yyyy-MM-dd'))"
     Write-Host "JSON 리포트     : $jsonPath"

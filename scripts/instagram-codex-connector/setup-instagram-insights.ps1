@@ -13,19 +13,14 @@
       "$env:LOCALAPPDATA\InstagramCodexConnector\config.json" 에 저장합니다.
     - 토큰/시크릿 원문은 콘솔, 로그, 예외 메시지 어디에도 출력되지 않습니다.
 
-.PARAMETER RegisterDailyTask
-    지정하면 collect-instagram-insights.ps1 을 매일 자동 실행하는
-    Windows 작업 스케줄러 작업을 등록합니다. (만료 10일 전 자동 갱신용)
-
 .NOTES
     Windows 전용 스크립트입니다 (Windows Forms + DPAPI 사용).
     $env:USERPROFILE / $env:LOCALAPPDATA 만 사용하므로 다른 PC/계정에서도 그대로 동작합니다.
+    매일 자동 브리프 생성은 register-daily-brief.ps1 로 별도 등록합니다.
 #>
 
 [CmdletBinding()]
-param(
-    [switch]$RegisterDailyTask
-)
+param()
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -368,27 +363,5 @@ try {
     [System.GC]::Collect()
 }
 
-# ---------------------------------------------------------------------------
-# 5. (옵션) 매일 자동 실행 작업 등록 - 만료 10일 전 자동 갱신용
-# ---------------------------------------------------------------------------
-
-if ($RegisterDailyTask) {
-    $collectScript = Join-Path $PSScriptRoot 'collect-instagram-insights.ps1'
-    if (-not (Test-Path $collectScript)) {
-        Write-Warning "collect-instagram-insights.ps1 을 찾을 수 없어 예약 작업을 등록하지 못했습니다: $collectScript"
-    } else {
-        $taskName = 'InstagramCodexConnector-DailyCollect'
-        $action = New-ScheduledTaskAction -Execute 'powershell.exe' `
-            -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$collectScript`""
-        $trigger = New-ScheduledTaskTrigger -Daily -At '09:00'
-        $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
-
-        try {
-            Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger `
-                -Principal $principal -Force | Out-Null
-            Write-Host "매일 09:00 자동 실행 작업을 등록했습니다: $taskName" -ForegroundColor Green
-        } catch {
-            Write-Warning "예약 작업 등록 실패: $($_.Exception.Message)"
-        }
-    }
-}
+# 매일 자동 브리프 생성을 원하면 register-daily-brief.ps1 (또는 3_아침브리프_자동등록.bat) 을
+# 별도로 한 번 실행하세요. 연결 설정과 예약 작업 등록을 분리해 두었습니다.
