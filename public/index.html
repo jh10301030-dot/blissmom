@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유튜브 카드뉴스 메이커</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <p class="hero-badge">🎬 YouTube → 카드뉴스</p>
+      <h1>유튜브 링크 하나로<br />카드뉴스를 만들어 보세요</h1>
+      <p class="hero-sub">영상 자막을 분석해서 술술 넘겨볼 수 있는 카드뉴스로 요약해 드려요.</p>
+    </header>
+
+    <form id="cardForm" class="input-card">
+      <label for="urlInput" class="sr-only">유튜브 링크</label>
+      <input
+        id="urlInput"
+        type="text"
+        inputmode="url"
+        placeholder="https://www.youtube.com/watch?v=..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit" id="submitBtn">카드뉴스 만들기</button>
+    </form>
+    <p class="hint">자막(자동 생성 포함)이 있는 영상이어야 만들 수 있어요.</p>
+
+    <section id="statusArea" class="status-area" hidden></section>
+
+    <section id="resultArea" class="result-area" hidden>
+      <div class="video-meta">
+        <img id="videoThumb" alt="" />
+        <div>
+          <p id="videoTitle" class="video-title"></p>
+          <p id="videoAuthor" class="video-author"></p>
+        </div>
+      </div>
+
+      <div class="viewer">
+        <button type="button" id="prevBtn" class="nav-btn nav-prev" aria-label="이전 카드">‹</button>
+        <div class="card-stage">
+          <div id="cardTrack" class="card-track"></div>
+        </div>
+        <button type="button" id="nextBtn" class="nav-btn nav-next" aria-label="다음 카드">›</button>
+      </div>
+
+      <div class="dots" id="dots"></div>
+
+      <div class="actions">
+        <button type="button" id="downloadBtn" class="secondary-btn">현재 카드 이미지로 저장</button>
+        <button type="button" id="resetBtn" class="secondary-btn">다른 영상 만들기</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
