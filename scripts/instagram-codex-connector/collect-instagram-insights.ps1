@@ -26,7 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v3-diag2'
+$SCRIPT_VERSION = '2026-09-11-v4-final'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -392,29 +392,38 @@ function Get-DashboardHtmlTemplate {
   }
 
   try {
-    if (typeof Chart !== 'undefined' && history.length > 0) {
+    var growthPoints = history
+      .map(function (h) { return { date: h.date, count: Number(h.followersCount) }; })
+      .filter(function (p) { return p.date && !isNaN(p.count); });
+
+    if (typeof Chart !== 'undefined' && growthPoints.length > 0) {
       var ctx1 = document.getElementById('growthChart').getContext('2d');
       new Chart(ctx1, {
         type: 'line',
         data: {
-          labels: history.map(function (h) { return h.date; }),
+          labels: growthPoints.map(function (p) { return p.date; }),
           datasets: [{
             label: '팔로워',
-            data: history.map(function (h) { return h.followersCount; }),
+            data: growthPoints.map(function (p) { return p.count; }),
             borderColor: '#ec4899',
             backgroundColor: 'rgba(236,72,153,0.12)',
             fill: true,
             tension: 0.25,
-            pointRadius: history.length > 14 ? 0 : 4,
+            spanGaps: true,
+            pointRadius: growthPoints.length > 14 ? 0 : 4,
             pointBackgroundColor: '#ec4899'
           }]
         },
         options: {
+          animation: false,
           plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: false } }
+          scales: {
+            x: { type: 'category' },
+            y: { beginAtZero: false }
+          }
         }
       });
-      if (history.length === 1) {
+      if (growthPoints.length === 1) {
         document.getElementById('growthChart').insertAdjacentHTML('afterend', '<p style="color:#9ca3af;font-size:13px">아직 하루치 데이터라 점 하나만 보입니다. 매일 쌓이면 선 그래프가 됩니다.</p>');
       }
     } else {
