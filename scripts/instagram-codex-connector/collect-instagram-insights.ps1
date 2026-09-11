@@ -26,7 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v5-diag'
+$SCRIPT_VERSION = '2026-09-11-v6-final'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -374,7 +374,7 @@ function Get-DashboardHtmlTemplate {
 </div>
 
 <script>
-  var history = __HISTORY_JSON__;
+  var followerHistory = __HISTORY_JSON__;
   var monthly = __MONTHLY_JSON__;
   var media = __MEDIA_JSON__;
   var mediaArchive = __MEDIA_ARCHIVE_JSON__;
@@ -392,7 +392,7 @@ function Get-DashboardHtmlTemplate {
   }
 
   try {
-    var growthPoints = history
+    var growthPoints = followerHistory
       .map(function (h) { return { date: h.date, count: Number(h.followersCount) }; })
       .filter(function (p) { return p.date && !isNaN(p.count); });
 
@@ -485,7 +485,7 @@ function Get-DashboardHtmlTemplate {
 
   try {
     var tbody = document.querySelector('#dailyLogTable tbody');
-    history.slice().reverse().forEach(function (h) {
+    followerHistory.slice().reverse().forEach(function (h) {
     var tr = document.createElement('tr');
     var delta = (h.followersDelta === null || h.followersDelta === undefined) ? '-' :
       (h.followersDelta > 0 ? '+' + h.followersDelta : h.followersDelta);
