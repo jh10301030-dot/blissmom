@@ -21,9 +21,10 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$collectScript = Join-Path $PSScriptRoot 'collect-instagram-insights.ps1'
-if (-not (Test-Path $collectScript)) {
-    throw "collect-instagram-insights.ps1 을 찾을 수 없습니다: $collectScript (같은 폴더에 있어야 합니다)"
+$collectScript = Get-ChildItem -Path $PSScriptRoot -Filter 'collect*instagram*insights*.ps1' -File -ErrorAction SilentlyContinue |
+    Select-Object -First 1 -ExpandProperty FullName
+if (-not $collectScript) {
+    throw "collect-instagram-insights.ps1 을 찾을 수 없습니다: $PSScriptRoot 폴더 안에 같이 있어야 합니다."
 }
 
 $configPath = Join-Path (Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector') 'config.json'
