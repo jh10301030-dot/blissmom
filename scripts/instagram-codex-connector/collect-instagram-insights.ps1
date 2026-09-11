@@ -920,6 +920,7 @@ try {
         totalSaved     = $totalSaved
         totalShares    = $totalShares
         mediaCount     = $profile.media_count
+        source         = 'live'
     }
     try {
         $history = @($history | Sort-Object { [DateTime]$_.date })

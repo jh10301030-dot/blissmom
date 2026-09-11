@@ -18,17 +18,25 @@
 
 .PARAMETER DaysBack
     오늘로부터 며칠 전까지 시도해볼지 (기본값 180일)
+
+.PARAMETER RefreshDays
+    Instagram(Meta)의 팔로워 증감 지표는 최근 며칠치는 아직 확정되지 않아
+    0으로 표시될 때가 있습니다. 이 스크립트가 예전에 채워 넣은(=실시간 수집이
+    아닌) 최근 N일치 기록은, 그 사이 Meta 쪽 데이터가 확정됐을 수 있으므로
+    이미 채워져 있어도 다시 덮어써서 최신 값으로 갱신합니다. 실시간으로
+    수집된(source=live) 날짜는 절대 덮어쓰지 않습니다. (기본값 7일)
 #>
 
 [CmdletBinding()]
 param(
-    [int]$DaysBack = 180
+    [int]$DaysBack = 180,
+    [int]$RefreshDays = 7
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v4-final'
+$SCRIPT_VERSION = '2026-09-11-v5-final'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -125,12 +133,14 @@ try {
     }
     $historyByDate = @{}
     foreach ($h in $history) {
-        $hNorm = $h | Select-Object date, followersCount, followersDelta, totalReach, totalSaved, totalShares, mediaCount
+        $hNorm = $h | Select-Object date, followersCount, followersDelta, totalReach, totalSaved, totalShares, mediaCount, source
         # 예전 버그로 생긴 손상된 기록(date 가 문자열이 아니거나 형식이 안 맞음)은 걸러낸다
         if ($hNorm.date -is [string] -and $hNorm.date -match '^\d{4}-\d{2}-\d{2}$') {
+            if (-not $hNorm.source) { $hNorm.source = 'backfill' }
             $historyByDate[$hNorm.date] = $hNorm
         }
     }
+    $refreshCutoff = $anchorDate.AddDays(-$RefreshDays)
 
     # 계정 레벨 일별 팔로워 순증감(follower_count) 조회 - 25일씩 구간을 나눠서 요청
     $endDate = $anchorDate
@@ -186,6 +196,7 @@ try {
     $allDeltas = $allDeltas | Sort-Object date -Descending -Unique
     $runningCount = $anchorFollowers
     $filled = 0
+    $refreshed = 0
     $skippedExisting = 0
 
     foreach ($d in $allDeltas) {
@@ -195,20 +206,30 @@ try {
         $runningCount = $runningCount - [int]$d.delta
 
         if ($historyByDate.ContainsKey($d.date)) {
-            $skippedExisting++
-            continue
+            $existing = $historyByDate[$d.date]
+            $isRecent = ([DateTime]$d.date) -gt $refreshCutoff
+            if ($existing.source -eq 'live' -or -not $isRecent) {
+                # 실시간으로 수집된 날짜이거나, 이미 오래 전에 확정된 값은 그대로 둔다
+                $skippedExisting++
+                continue
+            }
+            # 최근 며칠 안에 채워졌던 값은 Meta 쪽 데이터가 그새 확정됐을 수 있으므로 새 값으로 갱신
+            $refreshed++
+        } else {
+            $filled++
         }
 
+        $existingEntry = $historyByDate[$d.date]
         $historyByDate[$d.date] = [PSCustomObject]@{
             date           = $d.date
             followersCount = $endOfDayCount
             followersDelta = [int]$d.delta
-            totalReach     = $null
-            totalSaved     = $null
-            totalShares    = $null
-            mediaCount     = $null
+            totalReach     = if ($existingEntry) { $existingEntry.totalReach } else { $null }
+            totalSaved     = if ($existingEntry) { $existingEntry.totalSaved } else { $null }
+            totalShares    = if ($existingEntry) { $existingEntry.totalShares } else { $null }
+            mediaCount     = if ($existingEntry) { $existingEntry.mediaCount } else { $null }
+            source         = 'backfill'
         }
-        $filled++
     }
 
     $history = @($historyByDate.Values | Sort-Object { [DateTime]$_.date })
@@ -217,6 +238,7 @@ try {
     Write-Host ''
     Write-Host '=== 복원 결과 ===' -ForegroundColor Green
     Write-Host "새로 채운 날짜 수     : $filled"
+    Write-Host "최신 값로 갱신한 날짜 : $refreshed  (최근 $RefreshDays 일 이내, Meta 데이터가 늦게 확정된 경우)"
     Write-Host "이미 있어서 건너뜀    : $skippedExisting"
     if ($earliestGot) {
         Write-Host "가장 오래된 복원 날짜 : $earliestGot"
