@@ -26,7 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v4-final'
+$SCRIPT_VERSION = '2026-09-11-v5-diag'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -429,7 +429,14 @@ function Get-DashboardHtmlTemplate {
     } else {
       document.getElementById('growthChart').insertAdjacentHTML('afterend', '<p style="color:#9ca3af;font-size:13px">데이터가 더 쌓이면 그래프가 표시됩니다.</p>');
     }
-  } catch (e) { console.error('growth chart error', e); }
+  } catch (e) {
+    console.error('growth chart error', e);
+    try {
+      document.getElementById('growthChart').insertAdjacentHTML('afterend',
+        '<p style="color:#dc2626;font-size:12px;white-space:pre-wrap">[진단] 그래프 오류: ' +
+        String(e && e.message ? e.message : e).replace(/</g, '&lt;') + '</p>');
+    } catch (e2) { }
+  }
 
   try {
     if (typeof Chart !== 'undefined' && monthly.length > 0) {
