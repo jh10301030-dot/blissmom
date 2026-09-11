@@ -26,7 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v2-diag'
+$SCRIPT_VERSION = '2026-09-11-v3-diag2'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -873,8 +873,14 @@ try {
     if (Test-Path $historyPath) {
         $rawHistoryText = Get-Content -Path $historyPath -Raw
         Write-Host "[진단] 읽은 파일 글자 수: $($rawHistoryText.Length)" -ForegroundColor Magenta
+        $previewLen = [Math]::Min(300, $rawHistoryText.Length)
+        Write-Host "[진단] 파일 앞부분: $($rawHistoryText.Substring(0, $previewLen))" -ForegroundColor Magenta
+        $tailLen = [Math]::Min(200, $rawHistoryText.Length)
+        Write-Host "[진단] 파일 뒷부분: $($rawHistoryText.Substring($rawHistoryText.Length - $tailLen))" -ForegroundColor Magenta
         try {
-            $history = @($rawHistoryText | ConvertFrom-Json)
+            $parsedRaw = ConvertFrom-Json -InputObject $rawHistoryText
+            Write-Host "[진단] 파싱된 값의 .NET 타입: $($parsedRaw.GetType().FullName)" -ForegroundColor Magenta
+            $history = @($parsedRaw)
             Write-Host "[진단] 파싱 성공, 읽어들인 항목 수: $($history.Count)" -ForegroundColor Magenta
         } catch {
             Write-Host "[진단] JSON 파싱 실패!! 오류: $($_.Exception.Message)" -ForegroundColor Red
