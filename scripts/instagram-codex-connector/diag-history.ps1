@@ -27,12 +27,16 @@ if (-not (Test-Path $HistoryPath)) {
         $arr = @($data)
         Write-Host "파싱된 전체 항목 수     : $($arr.Count)" -ForegroundColor Green
         if ($arr.Count -gt 0) {
-            $dates = $arr | ForEach-Object { "$($_.date)" } | Sort-Object
-            Write-Host "가장 이른 날짜          : $($dates | Select-Object -First 1)"
-            Write-Host "가장 늦은 날짜          : $($dates | Select-Object -Last 1)"
+            $sorted = $arr | Sort-Object { [DateTime]$_.date }
+            Write-Host "가장 이른 날짜          : $($sorted | Select-Object -First 1 -ExpandProperty date)"
+            Write-Host "가장 늦은 날짜          : $($sorted | Select-Object -Last 1 -ExpandProperty date)"
             Write-Host ''
-            Write-Host '전체 날짜 목록:' -ForegroundColor Yellow
-            $dates | ForEach-Object { Write-Host "  $_" }
+            Write-Host '최근 15일 상세 (날짜 / 팔로워 / 전일대비 / 수집방식):' -ForegroundColor Yellow
+            $recent = $sorted | Select-Object -Last 15
+            foreach ($r in $recent) {
+                $src = if ($r.source) { $r.source } else { '(표시없음-예전기록)' }
+                Write-Host ("  {0}  followers={1,-8} delta={2,-6} source={3}" -f $r.date, $r.followersCount, $r.followersDelta, $src)
+            }
         }
     } catch {
         Write-Host "JSON 파싱 오류: $($_.Exception.Message)" -ForegroundColor Red
