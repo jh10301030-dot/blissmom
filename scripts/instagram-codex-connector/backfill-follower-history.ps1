@@ -28,7 +28,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v3-diag'
+$SCRIPT_VERSION = '2026-09-11-v4-final'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -227,7 +227,19 @@ try {
     }
 
     Write-Host ''
-    Write-Host '(진단 목적으로 대시보드 자동 갱신은 이번에 건너뜁니다. 2_인사이트수집.bat 을 직접 실행해 주세요.)' -ForegroundColor Yellow
+    Write-Host '대시보드를 새로 만드는 중... (이 창을 닫지 말고 기다려 주세요)' -ForegroundColor DarkGray
+    # 파일 이름 뒤에 (1) 등이 붙어있어도 찾을 수 있도록 패턴으로 검색
+    $collectScript = Get-ChildItem -Path $PSScriptRoot -Filter 'collect*instagram*insights*.ps1' -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty FullName
+    if ($collectScript) {
+        try {
+            & $collectScript
+        } catch {
+            Write-Warning "대시보드 갱신 중 오류(직접 2_인사이트수집.bat 을 실행해 주세요): $($_.Exception.Message)"
+        }
+    } else {
+        Write-Warning 'collect-instagram-insights.ps1 을 찾을 수 없어 대시보드를 자동으로 갱신하지 못했습니다. 이 창이 완전히 끝난 뒤 2_인사이트수집.bat 을 직접 실행해 주세요.'
+    }
 
 } finally {
     $accessToken = $null
