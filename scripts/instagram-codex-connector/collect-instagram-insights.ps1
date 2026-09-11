@@ -26,7 +26,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$SCRIPT_VERSION = '2026-09-11-v1'
+$SCRIPT_VERSION = '2026-09-11-v2-diag'
 Write-Host "[스크립트 버전: $SCRIPT_VERSION]" -ForegroundColor Magenta
 
 $ConnectorRoot = Join-Path $env:LOCALAPPDATA 'InstagramCodexConnector'
@@ -867,14 +867,29 @@ try {
     $historyPath = Join-Path $ReportsDir 'history.json'
     $todayKey = $generatedAtUtc.ToLocalTime().ToString('yyyy-MM-dd')
 
+    Write-Host "[진단] history.json 경로: $historyPath" -ForegroundColor Magenta
+
     $history = @()
     if (Test-Path $historyPath) {
-        try { $history = @(Get-Content -Path $historyPath -Raw | ConvertFrom-Json) } catch { $history = @() }
+        $rawHistoryText = Get-Content -Path $historyPath -Raw
+        Write-Host "[진단] 읽은 파일 글자 수: $($rawHistoryText.Length)" -ForegroundColor Magenta
+        try {
+            $history = @($rawHistoryText | ConvertFrom-Json)
+            Write-Host "[진단] 파싱 성공, 읽어들인 항목 수: $($history.Count)" -ForegroundColor Magenta
+        } catch {
+            Write-Host "[진단] JSON 파싱 실패!! 오류: $($_.Exception.Message)" -ForegroundColor Red
+            $history = @()
+        }
+    } else {
+        Write-Host "[진단] history.json 파일이 존재하지 않음" -ForegroundColor Magenta
     }
+
     # 예전 버그로 생긴 손상된 기록(date 가 문자열이 아니거나 형식이 안 맞음)은 걸러낸다
     $history = @($history | Where-Object {
         $_.date -is [string] -and $_.date -match '^\d{4}-\d{2}-\d{2}$' -and $_.date -ne $todayKey
     })
+    Write-Host "[진단] 필터(오늘 제외) 후 남은 과거 기록 수: $($history.Count)" -ForegroundColor Magenta
+
     $history += [PSCustomObject]@{
         date           = $todayKey
         followersCount = $profile.followers_count
@@ -891,6 +906,7 @@ try {
         $history = @($history | Where-Object { $_.date -is [string] -and $_.date -match '^\d{4}-\d{2}-\d{2}$' })
         $history = @($history | Sort-Object { [DateTime]$_.date })
     }
+    Write-Host "[진단] 오늘자 추가 후 최종 저장할 항목 수: $($history.Count)" -ForegroundColor Magenta
     Set-Content -Path $historyPath -Value (ConvertTo-JsonArraySafe -InputObject $history -Depth 5) -Encoding UTF8
 
     # -----------------------------------------------------------------------
